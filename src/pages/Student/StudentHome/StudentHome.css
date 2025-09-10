@@ -1,0 +1,10 @@
+.student-home {
+    display: grid;
+    grid-template-columns: 1fr 5fr;
+    grid-template-rows: 64px auto;
+  
+    & > .sidebar {
+      grid-row: 1/3;
+    }
+  }
+  
