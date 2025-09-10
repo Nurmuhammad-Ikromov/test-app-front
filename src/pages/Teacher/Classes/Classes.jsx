@@ -139,7 +139,7 @@ const Classes = () => {
             <h1 className="text-xl font-bold mb-4">Dars jurnali</h1>
 
             {/* Sinf tanlash */}
-            <div className="mb-4">
+            <div className="flex  items-center gap-4 mb-4">
                 <label className="font-semibold block mb-2">Sinf:</label>
                 <div className="flex flex-wrap gap-2">
                     {classes.map((cls) => (
@@ -201,47 +201,61 @@ const Classes = () => {
 
 
             {/* Jadval */}
-            <div className="overflow-x-auto">
-                <table className="w-full border border-gray-300">
-                    <thead>
-                        <tr className="bg-gray-100">
-                            <th className="border p-2">O‘quvchi</th>
+            <div className="overflow-auto max-h-[600px] border border-gray-300 rounded">
+                <table className="w-full border-collapse table-auto">
+                    <thead className="bg-gray-100 sticky top-0 z-20">
+                        <tr>
+                            <th className="border p-2 sticky left-0 bg-gray-100 z-30">O‘quvchi</th>
                             {dates.map((d) => (
-                                <th key={d} className="border p-2">
-                                    {d}
-                                </th>
+                                <th key={d} className="border p-2">{d}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {classes.find((el) => el._id === selectedClass)?.students.map((student) => (
                             <tr key={student._id}>
-                                <td className="border p-2">
+                                <td className="border p-2 sticky left-0 bg-gray-100 z-10">
                                     {student.first_name} {student.last_name}
                                 </td>
-                                {dates.map((d) => (
-                                    <td key={d} className="border p-2">
-                                        <select
-                                            value={gradesByDate[d]?.[student._id] || ""}
-                                            onChange={(e) =>
-                                                handleGradeChange(student._id, d, e.target.value)
-                                            }
-                                            className="border rounded p-1"
-                                        >
-                                            <option value="">-</option>
-                                            <option value="5">5</option>
-                                            <option value="4">4</option>
-                                            <option value="3">3</option>
-                                            <option value="2">2</option>
-                                            <option value="0">0</option>
-                                        </select>
+                                {dates.map((d) => {
+                                    const grade = gradesByDate[d]?.[student._id]?.toString()
+
+                                    let bgColor = "bg-white text-black";
+                                    if (grade !== undefined && grade !== "") {
+                                        switch (grade) {
+                                            case "5": bgColor = "bg-green-500 text-black"; break;
+                                            case "4": bgColor = "bg-orange-400 text-black"; break;
+                                            case "3": bgColor = "bg-yellow-300 text-black"; break;
+                                            case "2": bgColor = "bg-red-300 text-black"; break;
+                                            case "1": bgColor = "bg-red-400 text-black"; break;
+                                            case "0": bgColor = "bg-red-500 text-black"; break;
+                                        }
+                                    }
+                                    return gradesByDate && <td key={d} className={`border p-2  `}>
+                                        <div className={`${bgColor}`}>
+                                            <select
+                                                value={grade ?? ""}
+                                                onChange={(e) => handleGradeChange(student._id, d, e.target.value)}
+                                                className="border rounded p-1 w-full bg-transparent"
+                                            >
+                                                <option value="">-</option>
+                                                <option value="5">5</option>
+                                                <option value="4">4</option>
+                                                <option value="3">3</option>
+                                                <option value="2">2</option>
+                                                <option value="1">1</option>
+                                                <option value="0">0</option>
+                                            </select>
+                                        </div>
                                     </td>
-                                ))}
+                                })}
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+
+
         </div>
     );
 };

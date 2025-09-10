@@ -8,11 +8,10 @@ import { Link, useNavigate } from "react-router-dom";
 const Header = ({ userFirstName, role }) => {
   const navigate = useNavigate();
   const userData = JSON.parse(localStorage.getItem("userData")) || null;
-  console.log(userData);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [avatar] = useState(() => {
     return (
-      localStorage.getItem("profileImage") || <RxAvatar  className="w-5 h-5" />
+      localStorage.getItem("profileImage") || <RxAvatar className="w-5 h-5" />
     );
   });
   // Dropdownni tashqaridan bosganda yopish

@@ -72,9 +72,8 @@ const Grades = () => {
     API.get("/grades/my", {
       headers: { Authorization: "Bearer " + token },
     })
-      .then((res) => res.json())
       .then((data) => {
-        const sorted = (data.grades || []).sort(
+        const sorted = (data.data.grades || []).sort(
           (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
         );
         setGrades(sorted);
@@ -129,6 +128,9 @@ const Grades = () => {
       return acc;
     }, {});
   };
+
+  console.log(grades);
+  
 
   return (
     <div className="p-6">
