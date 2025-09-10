@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import API from "../../../utils/config";
+import { toast } from "react-toastify";
 
 const Classes = () => {
     const [classes, setClasses] = useState([]);
@@ -127,10 +128,10 @@ const Classes = () => {
 
             setPendingGrades({});
             setUnsavedChanges(false);
-            alert("Saqlab qo‘yildi ✅");
+            toast.success("Baholar saqlab qo‘yildi ✅");
         } catch (error) {
             console.error(error);
-            alert("Xatolik yuz berdi ❌");
+            toast.error("Xatolik yuz berdi ❌");
         }
     };
 

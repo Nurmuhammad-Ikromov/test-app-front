@@ -14,8 +14,15 @@ import {
   Box,
   FormControl,
   InputLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from "@mui/material";
-import { BiEdit } from "react-icons/bi";
+import { BiEdit, BiTrash } from "react-icons/bi";
+import { ToastContainer, toast } from 'react-toastify';
 import StudentEditModal from "./StudentEditModal";
 import API from "../../../utils/config";
 
@@ -25,6 +32,7 @@ const StudentList = () => {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteStudent, setDeleteStudent] = useState(null);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -65,7 +73,7 @@ const StudentList = () => {
       });
       setClasses(data);
     } catch {
-      console.error("Sinf maʼlumotlarini olishda xatolik yuz berdi");
+      toast.error("Sinf maʼlumotlarini olishda xatolik yuz berdi");
     }
   }, [token]);
 
@@ -94,12 +102,40 @@ const StudentList = () => {
       await API.put(`/students/update/${updatedStudent._id}`, updatedStudent, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert("Talaba ma’lumotlari yangilandi");
+      toast.success("Talaba ma’lumotlari yangilandi");
       setEditOpen(false);
       fetchStudents();
     } catch {
-      alert("Xatolik yuz berdi");
+      toast.error("Xatolik yuz berdi");
     }
+  };
+
+  const handleDeleteClick = (student) => {
+    setDeleteStudent(student);
+  };
+
+
+
+  const handleDeleteConfirm = async () => {
+    try {
+      if (!selectedClass) {
+        toast.warning("Sinf tanlanmagan!");
+        return;
+      }
+      await API.post(
+        `/students/remove-student`,
+        { studentId: deleteStudent._id }
+      );
+      toast.success("Talaba o‘chirildi");
+      setDeleteStudent(null);
+      fetchStudents();
+    } catch {
+      toast.error("Xatolik yuz berdi");
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteStudent(null);
   };
 
   return (
@@ -108,24 +144,26 @@ const StudentList = () => {
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h5">Talabalar ro‘yxati</Typography>
 
-          <FormControl sx={{ minWidth: 240 }}>
-            <InputLabel id="class-select-label">Sinfni tanlang</InputLabel>
-            <Select
-              labelId="class-select-label"
-              value={selectedClass}
-              onChange={(e) => {
-                setSelectedClass(e.target.value);
-                setPage(0);
-              }}
-              label="Sinfni tanlang"
-            >
-              {classes.map((cls) => (
-                <MenuItem key={cls._id} value={cls._id}>
-                  {cls.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+        <FormControl sx={{ minWidth: 240 }}>
+  <Select
+    value={selectedClass}
+    onChange={(e) => {
+      setSelectedClass(e.target.value);
+      setPage(0);
+    }}
+    displayEmpty
+  >
+    <MenuItem value="" disabled>
+      Sinfni tanlang
+    </MenuItem>
+    {classes.map((cls) => (
+      <MenuItem key={cls._id} value={cls._id}>
+        {cls.name}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
         </Box>
 
         {loading ? (
@@ -153,6 +191,13 @@ const StudentList = () => {
                   >
                     <BiEdit />
                   </IconButton>
+                  <IconButton
+                    edge="end"
+                    color="error"
+                    onClick={() => handleDeleteClick(student)}
+                  >
+                    <BiTrash />
+                  </IconButton>
                 </ListItem>
               ))}
             </List>
@@ -175,7 +220,24 @@ const StudentList = () => {
         onClose={() => setEditOpen(false)}
         student={selectedStudent}
         onSave={handleEditSave}
+        showUsername={true} // modal ichida username ko‘rsatish uchun prop
       />
+
+      <Dialog open={!!deleteStudent} onClose={handleDeleteCancel}>
+        <DialogTitle>Talabani o‘chirish</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Haqiqatan ham {deleteStudent?.first_name} {deleteStudent?.last_name}ni
+            o‘chirmoqchimisiz?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Yo‘q</Button>
+          <Button color="error" onClick={handleDeleteConfirm}>
+            Ha
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

@@ -19,6 +19,7 @@ const StudentEditModal = ({ open, onClose, student, onSave }) => {
     last_name: "",
     classId: "",
     password: "",
+    username: ""
   });
 
   useEffect(() => {
@@ -27,12 +28,15 @@ const StudentEditModal = ({ open, onClose, student, onSave }) => {
         first_name: student?.first_name || "",
         last_name: student?.last_name || "",
         classId: student?.class?._id || "",
+        username: student?.username || "",
         password: "",
       });
     }
 
     API.get("/class")
-      .then((res) => setClasses(res.data))
+      .then((res) => {
+        setClasses(res.data)
+      })
       .catch((err) => console.log(err));
   }, [student]);
   useEffect(() => {
@@ -70,6 +74,14 @@ const StudentEditModal = ({ open, onClose, student, onSave }) => {
           name="last_name"
           value={formData.last_name}
           onChange={handleChange}
+        />
+        <TextField
+          margin="dense"
+          label="Username"
+          fullWidth
+          name="username"
+          value={student?.username}
+          disabled
         />
         {/* <TextField
           margin="dense"
