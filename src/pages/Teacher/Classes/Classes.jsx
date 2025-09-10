@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import API from "../api"; // API instance joylashgan faylni to‘g‘ri import qil
+import API from "../../../utils/config";
 
 const Classes = () => {
     const [classes, setClasses] = useState([]);
@@ -146,11 +146,10 @@ const Classes = () => {
                         <button
                             key={cls._id}
                             onClick={() => setSelectedClass(cls._id)}
-                            className={`px-4 py-2 rounded border ${
-                                selectedClass === cls._id
-                                    ? "bg-green-500 text-white"
-                                    : "bg-white text-black"
-                            }`}
+                            className={`px-4 py-2 rounded border ${selectedClass === cls._id
+                                ? "bg-green-500 text-white"
+                                : "bg-white text-black"
+                                }`}
                         >
                             {cls.name}
                         </button>
@@ -178,26 +177,28 @@ const Classes = () => {
             )}
 
             {/* Sana qo‘shish */}
-            <div className="mb-4">
-                <label className="font-semibold">Sana qo‘shish: </label>
-                <input
-                    type="date"
-                    onChange={(e) => addDate(e.target.value)}
-                    className="border p-2 rounded"
-                />
-            </div>
+            <div className="flex justify-between mb-4">
+                <div>
+                    <label className="font-semibold">Sana qo‘shish: </label>
+                    <input
+                        type="date"
+                        onChange={(e) => addDate(e.target.value)}
+                        className="border p-2 rounded"
+                    />
+                </div>
 
-            {/* Saqlash tugmasi */}
-            {unsavedChanges && (
-                <div className="mb-4">
+                {/* Saqlash tugmasi */}
+                {unsavedChanges && (
                     <button
                         onClick={handleSave}
                         className="px-4 py-2 bg-blue-600 text-white rounded shadow"
                     >
                         Saqlash
                     </button>
-                </div>
-            )}
+                )}
+            </div>
+
+
 
             {/* Jadval */}
             <div className="overflow-x-auto">
