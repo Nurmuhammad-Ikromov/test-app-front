@@ -146,7 +146,7 @@ const LoginPage = () => {
           </form>
 
           <p className="text-xs text-gray-500 text-center mt-6">
-            © 2025 Sizning Universitetingiz. Barcha huquqlar himoyalangan.
+            ©2025 PDP School. Barcha huquqlar himoyalangan.
           </p>
         </div>
       </div>
