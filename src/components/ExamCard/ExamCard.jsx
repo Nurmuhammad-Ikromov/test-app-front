@@ -18,7 +18,6 @@ const ExamCard = ({
   questions,
   type,
 }) => {
-  console.log(_id);
   const navigate = useNavigate();
 
   // startTime va endTime formatini moment.js yordamida o'zgartirish

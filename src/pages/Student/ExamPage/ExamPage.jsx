@@ -60,7 +60,6 @@ const ExamPage = () => {
       setQuestions(shuffleArray(questionsValues));
     } catch (err) {
       setError("Savollarni olishda xatolik yuz berdi.");
-      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -84,7 +83,6 @@ const ExamPage = () => {
     alreadySubmittedRef.current = true;
     let response_result;
     if (type == "test") {
-      console.log(answers);
       response_result = questions.reduce((total, question) => {
         total[question.id] = {
           id: question.id,
@@ -99,9 +97,7 @@ const ExamPage = () => {
         question: question.question,
         option: output[question.id] || "",
       }));
-      console.log(response_result);
     }
-    console.log(response_result);
     try {
       const res = await API.post(`/exams/check/${examId}`, {
         response_result: response_result || questions,
@@ -217,7 +213,6 @@ const ExamPage = () => {
       submitAnswers();
     }
   };
-  console.log();
   if (loading) {
     return (
       <div style={{ textAlign: "center", marginTop: "20px" }}>

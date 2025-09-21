@@ -3,9 +3,26 @@ import { FaRegBell } from "react-icons/fa6";
 import { CiMail } from "react-icons/ci";
 import { RxAvatar } from "react-icons/rx";
 import { MdKeyboardArrowDown } from "react-icons/md";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Header = ({ userFirstName, role }) => {
+  const location = useLocation();
+
+  const getTitle = () => {
+    if (location.pathname.startsWith("/teacher/classes")) {
+      return "Dars jurnali";
+    } else if (location.pathname.startsWith("/teacher/students")) {
+      return "O'quvchilar ro'yxati";
+    } else if (location.pathname.startsWith("/teacher/exams")) {
+      return "Imtihonlar";
+    } else if (location.pathname.startsWith("/teacher/tests")) {
+      return "Testlar";
+    } else if (location.pathname === "/dashboard") {
+      return "Bosh sahifa";
+    } else {
+      return "Platforma";
+    }
+  };
   const navigate = useNavigate();
   const userData = JSON.parse(localStorage.getItem("userData")) || null;
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -30,30 +47,13 @@ const Header = ({ userFirstName, role }) => {
   }, []);
 
   return (
-    <div className="w-full flex justify-end items-center bg-white p-4 shadow-md">
+    <div className="w-full flex justify-between items-center bg-white p-4  shadow-md">
+      <h2 className="font-bold text-2xl">{getTitle()}</h2>
+
       {/* Bildirishnomalar va Xabarlar */}
       <div className="flex items-center gap-4">
-        {/* Bildirishnoma belgisi */}
-        <button
-          className="relative p-2 bg-gray-100 rounded-full hover:bg-gray-200"
-          aria-label="Bildirishnomalar"
-        >
-          <FaRegBell className="w-5 h-5" />
-          <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full translate-x-1/2 -translate-y-1/2">
-            3
-          </span>
-        </button>
-
-        {/* Xabarlar belgisi */}
-        <button
-          className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"
-          aria-label="Xabarlar"
-        >
-          <CiMail className="w-5 h-5" />
-        </button>
-
         {/* Foydalanuvchi profili */}
-        <div className="relative profile-dropdown">
+        <div className="relative profile-dropdown ">
           <div
             className="flex items-center gap-2 cursor-pointer bg-gray-100 p-2 rounded-full hover:bg-gray-200"
             onClick={() => setDropdownOpen((prev) => !prev)}

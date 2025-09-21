@@ -116,7 +116,6 @@ const History = ({ id }) => {
 
     API.get(`/exams/students/${id}/results?${searchUrl.toString()}`)
       .then((res) => {
-        console.log(res.data);
         setResults(res.data.data);
       })
       .catch((err) => console.log(err));

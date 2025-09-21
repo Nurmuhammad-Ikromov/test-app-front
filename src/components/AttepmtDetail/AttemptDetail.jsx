@@ -20,7 +20,6 @@ const AttemptDetail = () => {
     API.get(`/exams/${attemptId}`)
       .then((res) => {
         setExamName(res.data?.title);
-        console.log(res.data);
         setQuestions(Object.values(res.data.questions));
       })
       .catch((err) => console.log(err));

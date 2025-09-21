@@ -19,54 +19,53 @@ const Grades = () => {
   const months = [
     {
       index: 1,
-      name: "Yanvar"
+      name: "Yanvar",
     },
     {
       index: 2,
-      name: "Fevral"
+      name: "Fevral",
     },
     {
       index: 3,
-      name: "Mart"
+      name: "Mart",
     },
     {
       index: 4,
-      name: "Aprel"
+      name: "Aprel",
     },
     {
       index: 5,
-      name: "May"
+      name: "May",
     },
     {
       index: 6,
-      name: "Iyun"
+      name: "Iyun",
     },
     {
       index: 7,
-      name: "Iyul"
+      name: "Iyul",
     },
     {
       index: 8,
-      name: "Avgust"
+      name: "Avgust",
     },
     {
       index: 9,
-      name: "Sentyabr"
+      name: "Sentyabr",
     },
     {
       index: 10,
-      name: "Oktyabr"
+      name: "Oktyabr",
     },
     {
       index: 11,
-      name: "Noyabr"
+      name: "Noyabr",
     },
     {
       index: 12,
-      name: "Dekabr"
+      name: "Dekabr",
     },
-
-  ]
+  ];
 
   useEffect(() => {
     API.get("/grades/my", {
@@ -81,13 +80,15 @@ const Grades = () => {
       .catch((err) => console.error("Baholarni olishda xatolik:", err));
   }, []);
 
-  // Sana formatlash: 8-sentyabr
   const formatDay = (dateStr) => {
     if (!dateStr) return "—";
+
     const d = new Date(dateStr);
     const day = d.getDate();
-    const monthName = d.toLocaleDateString("uz-UZ", { month: "long" });
-    return `${day}-${months[monthName.slice(2) - 1].name}`;
+    const monthIndex = d.getMonth(); // 0-11
+    const monthName = months[monthIndex].name;
+
+    return `${day}-${monthName}`;
   };
 
   // Sana formatlash: 8-sentyabr, 2025 (grafikda to‘liq ko‘rsatish uchun)
@@ -102,15 +103,21 @@ const Grades = () => {
 
   // Oy formatlash: Sentyabr, 2025
   const formatMonth = (monthKey) => {
+    if (!monthKey) return "Noma’lum sana";
+
     const [year, month] = monthKey.split("-");
-    const date = new Date(year, Number(month) - 1);
-    const monthName = date.toLocaleDateString("uz-UZ", { month: "long" });
-    return `${months[monthName.slice(2) - 1].name}, ${year}`;
+    const monthIndex = Number(month);
+    if (isNaN(monthIndex) || monthIndex < 1 || monthIndex > 12)
+      return "Noma’lum sana";
+
+    return `${months[monthIndex - 1].name}, ${year}`;
   };
 
   // Fan bo‘yicha guruhlash
   const grouped = grades.reduce((acc, grade) => {
+    // grade.subject undefined bo‘lsa fallback name
     const subjectName = grade.subject?.name || "Noma’lum fan";
+
     if (!acc[subjectName]) acc[subjectName] = [];
     acc[subjectName].push(grade);
     return acc;
@@ -129,9 +136,6 @@ const Grades = () => {
     }, {});
   };
 
-  console.log(grades);
-  
-
   return (
     <div className="p-6">
       <h1 className="text-xl font-bold mb-4">📚 Mening baholarim</h1>
@@ -143,9 +147,11 @@ const Grades = () => {
       <div className="space-y-4">
         {Object.keys(grouped).map((subjectName) => {
           const gradesList = grouped[subjectName];
-          const teacherName = gradesList[0]?.teacher
-            ? `${gradesList[0].teacher.first_name || ""} ${gradesList[0].teacher.last_name || ""
-            }`
+
+          const teacherName = gradesList[gradesList.length - 1]?.teacher
+            ? `${gradesList[gradesList.length - 1].teacher.first_name || ""} ${
+                gradesList[gradesList.length - 1].teacher.last_name || ""
+              }`
             : "—";
 
           // Oylarga ajratish
@@ -200,10 +206,11 @@ const Grades = () => {
                             [subjectName]: monthKey,
                           }))
                         }
-                        className={`px-3 py-1 rounded-lg border ${currentMonthKey === monthKey
-                          ? "bg-indigo-500 text-white"
-                          : "bg-gray-100 hover:bg-gray-200"
-                          }`}
+                        className={`px-3 py-1 rounded-lg border ${
+                          currentMonthKey === monthKey
+                            ? "bg-indigo-500 text-white"
+                            : "bg-gray-100 hover:bg-gray-200"
+                        }`}
                       >
                         {formatMonth(monthKey)}
                       </button>

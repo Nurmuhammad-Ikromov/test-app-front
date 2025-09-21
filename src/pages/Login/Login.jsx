@@ -1,120 +1,156 @@
 import React, { useState } from "react";
-import {
-  Container,
-  TextField,
-  Button,
-  Typography,
-  Box,
-  Alert,
-} from "@mui/material";
-import API from "../../utils/config";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import API from "../../utils/config"; // axios instance
+import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
-  const navigate = useNavigate();
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false); // faqat submitdan keyin error chiqsin
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = async () => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitted(true);
+
     if (!username.trim() || !password.trim()) {
-      setError("Please enter both username and password.");
+      toast.error("Iltimos, login va parolni kiriting!", {
+        position: "top-right",
+        autoClose: 2000,
+      });
       return;
     }
 
     setLoading(true);
-    setError("");
-
-    const payload = {
-      username: username.trim(),
-      password: password.trim(),
-    };
 
     try {
-      const response = await API.post("/auth/login", payload);
+      const response = await API.post("/auth/login", {
+        username: username.trim(),
+        password: password.trim(),
+      });
 
-      if (response.data) {
-        alert("Login successful!");
-        // Redirect or handle success logic
+      if (response.data?.token) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("role", response.data.user.role);
         localStorage.setItem("userData", JSON.stringify(response.data));
-        response.data.user.role == "student"
-          ? navigate("/student/exams")
-          : navigate("/teacher/exams");
+
+        toast.success("Muvaffaqiyatli kirdingiz!", {
+          position: "top-right",
+          autoClose: 2000,
+        });
+
+        // Role bo‘yicha navigatsiya
+        if (response.data.user.role === "student") {
+          navigate("/student/grades");
+        } else if (response.data.user.role === "teacher") {
+          navigate("/teacher/classes");
+        } else  {
+          navigate("/director/teachers"); // default
+        }
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || "Login failed. Please try again.");
+        toast.error("Login yoki parol noto‘g‘ri!", {
+          position: "top-right",
+          autoClose: 2000,
+        });
       }
     } catch (error) {
-      console.error("Error:", error);
-      setError("An error occurred. Please try again later.");
+      console.error("Login error:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Xatolik yuz berdi. Qayta urinib ko‘ring!",
+        { position: "top-right", autoClose: 2000 }
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <Typography component="h1" variant="h5" sx={{ mb: 2 }}>
-          Login
-        </Typography>
+    <div className="flex h-screen">
+      {/* Chap tomonda rasm */}
+      <div className="hidden md:flex flex-1 items-center justify-center bg-[#1D2D5B]">
+        <img
+          src="/study.svg"
+          alt="Illustration"
+          className="max-w-[80%] h-auto"
+        />
+      </div>
 
-        {error && (
-          <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+      {/* O‘ng tomonda forma */}
+      <div className="flex flex-1 items-center justify-center">
+        <div className="w-full max-w-sm p-8 rounded-2xl">
+          <h2 className="flex items-center justify-center gap-1 text-2xl font-bold text-center text-[#0019FF] mb-6">
+            <img width={35} src="/favicon.ico" alt="" />
+            PDPedu
+          </h2>
 
-        <Box component="form" sx={{ mt: 1, width: "100%" }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="username"
-            label="Username"
-            name="username"
-            autoComplete="username"
-            autoFocus
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <Button
-            type="button"
-            fullWidth
-            variant="contained"
-            color="primary"
-            sx={{ mt: 3, mb: 2 }}
-            onClick={handleLogin}
-            disabled={loading}
-          >
-            {loading ? "Loading..." : "Login"}
-          </Button>
-        </Box>
-      </Box>
-    </Container>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <TextField
+              fullWidth
+              label="Login"
+              variant="outlined"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              error={submitted && !username}
+              helperText={submitted && !username ? "Loginni kiriting" : ""}
+            />
+
+            <TextField
+              fullWidth
+              label="Parol"
+              type={showPassword ? "text" : "password"}
+              variant="outlined"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              error={submitted && !password}
+              helperText={submitted && !password ? "Parolni kiriting" : ""}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{
+                mt: 2,
+                backgroundColor: "#1D2D5B",
+                "&:hover": { backgroundColor: "#1b263b" },
+                borderRadius: "5px",
+                textTransform: "none",
+                fontSize: "15px",
+              }}
+              disabled={loading}
+            >
+              {loading ? "Yuklanmoqda..." : "Kirish"}
+            </Button>
+          </form>
+
+          <p className="text-xs text-gray-500 text-center mt-6">
+            © 2025 Sizning Universitetingiz. Barcha huquqlar himoyalangan.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -1,11 +1,10 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import Sidebar from "../../../components/Sidebar/Sidebar";
 import Header from "../../../components/Header/Header";
-import { Outlet, useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
-import "./TeacherHome.css";
+import {jwtDecode} from "jwt-decode";
 
-const TeacherHome = () => {
+const DirectorHome = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,23 +19,22 @@ const TeacherHome = () => {
       const decoded = jwtDecode(token);
       const storedRole = decoded.role;
 
-      // faqat teacher yoki director kirsin
-      if (storedRole !== "teacher") {
+      if (storedRole !== "director") {
         navigate("/login");
       }
     } catch (err) {
-      // agar token noto‘g‘ri bo‘lsa
+      // Agar token yaroqsiz bo‘lsa (decode xato bersa)
       navigate("/login");
     }
   }, [navigate]);
 
   return (
     <div className="teacher-home">
-      <Sidebar role="teacher" />
-      <Header role="teacher" />
+      <Sidebar role="director" />
+      <Header role="director" />
       <Outlet />
     </div>
   );
 };
 
-export default TeacherHome;
+export default DirectorHome;

@@ -22,8 +22,6 @@ const StudentExams = () => {
         })
       );
       localStorage.setItem("userData", JSON.stringify(res.data.user));
-      // console.log("userData", res.data.user.grades);
-      // console.log("exams", res.data.aviableExamine);
       setLoading(false);
     } catch (error) {
       console.log(error);
@@ -33,7 +31,6 @@ const StudentExams = () => {
   useEffect(() => {
     getUserGrades();
   }, []);
-  console.log(exams)
   if (loading) {
     return (
       <div className="p-4 loading-container flex min-[450px] items-center justify-center flex-col">

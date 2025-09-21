@@ -17,13 +17,18 @@
     "@mui/x-date-pickers": "^7.27.0",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",
+    "dom-to-image": "^2.6.0",
+    "html2canvas": "^1.4.1",
+    "jwt-decode": "^4.0.0",
     "moment": "^2.30.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.4.0",
     "react-router-dom": "^7.1.1",
+    "react-slick": "^0.31.0",
     "react-toastify": "^11.0.5",
-    "recharts": "^3.2.0"
+    "recharts": "^3.2.0",
+    "slick-carousel": "^1.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

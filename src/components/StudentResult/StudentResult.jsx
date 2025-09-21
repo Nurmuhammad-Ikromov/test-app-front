@@ -69,7 +69,6 @@ const StudentResult = () => {
             {}
           );
           setGrades(result);
-          console.log(result);
         }
         setQuestions(res.data.examQuestions);
       } catch (err) {
@@ -124,7 +123,6 @@ const StudentResult = () => {
         {responseKeys.map((answerId, index) => {
           const question = questions[answerId];
           const response = responses[answerId];
-          console.log(response);
           return (
             <Card
               key={answerId}

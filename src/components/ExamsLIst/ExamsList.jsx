@@ -35,7 +35,6 @@ const ExamsList = () => {
     const [tests, setTests] = useState([]);
     const token = localStorage.getItem("token");
 
-    // console.log(tests);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);

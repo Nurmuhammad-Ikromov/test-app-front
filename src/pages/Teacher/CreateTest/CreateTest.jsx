@@ -41,8 +41,6 @@ const CreateTest = () => {
         setFileName("");
         setIsModalOpen(false);
 
-        // console.log(data);
-
         navigate(`/tests/${data.link}`)
 
 

@@ -1,0 +1,170 @@
+import domtoimage from "dom-to-image";
+
+// 🔹 To‘liq screenshot olish
+export const handleScreenshot = () => {
+  const wrapper = document.getElementById("grades-table");
+  if (!wrapper) return;
+
+  // 1) original headerdan ustunlar sonini va keep indekslarini aniqlaymiz
+  const originalThs = Array.from(wrapper.querySelectorAll("thead th"));
+  const totalCols = originalThs.length;
+
+  // 🔹 T/R (0) va O'quvchi (1) ustunlarini albatta saqlaymiz
+  const keepIndices = [0, 1];
+
+  // 🔹 Oxirgi 3 ustunni ham saqlaymiz
+  if (totalCols > 2) {
+    const start = Math.max(2, totalCols - 3);
+    for (let i = start; i < totalCols; i++) keepIndices.push(i);
+  }
+
+  // 2) clone qilib, tashqi ko'rinishni sozlaymiz va offscreen joyga qo'yamiz
+  const clone = wrapper.cloneNode(true);
+  clone.style.overflow = "visible";
+  clone.style.maxHeight = "none";
+  clone.style.height = "auto";
+  clone.style.position = "absolute";
+  clone.style.zIndex = "-199";
+  clone.style.left = "0";
+  clone.style.top = "0";
+
+  // sticky sinflarni olib tashlaymiz
+  clone
+    .querySelectorAll(".sticky")
+    .forEach((el) => el.classList.remove("sticky"));
+
+  // 3) clone ichidan originalga mos kelmaydigan ustunlarni o'chiramiz
+  const cloneThs = Array.from(clone.querySelectorAll("thead th"));
+  cloneThs.forEach((th, idx) => {
+    if (!keepIndices.includes(idx)) th.remove();
+  });
+
+  // har bir satrda ham tegishli ustunlarni o'chiramiz
+  const cloneRows = Array.from(clone.querySelectorAll("tbody tr"));
+  cloneRows.forEach((tr) => {
+    const tds = Array.from(tr.children);
+    tds.forEach((td, idx) => {
+      if (!keepIndices.includes(idx)) td.remove();
+    });
+  });
+
+  // --- 0) Eng uzun ismni topamiz
+  const names = Array.from(
+    wrapper.querySelectorAll("tbody tr td:nth-child(2)") // 🔹 endi O‘quvchi ustuni 2-chi
+  ).map((td) => td.textContent.trim());
+
+  let longestName = "";
+  names.forEach((name) => {
+    if (name.length > longestName.length) longestName = name;
+  });
+
+  // Canvas orqali o'lchaymiz
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  context.font = "16px Arial";
+  const textWidth = context.measureText(longestName).width;
+
+  const nameColWidth = Math.ceil(textWidth + 24);
+
+  // Clone ichidagi O‘quvchi ustuniga width qo'yamiz
+  Array.from(
+    clone.querySelectorAll("thead th:nth-child(2), tbody td:nth-child(2)")
+  ).forEach((cell) => {
+    cell.style.minWidth = nameColWidth + "px";
+    cell.style.maxWidth = nameColWidth + "px";
+    cell.style.width = nameColWidth + "px";
+    cell.style.whiteSpace = "nowrap";
+  });
+
+  // 4) selectlarni span ga almashtiramiz
+  const originalRows = Array.from(wrapper.querySelectorAll("tbody tr"));
+  const cloneSelects = Array.from(clone.querySelectorAll("select"));
+
+  cloneSelects.forEach((cloneSel) => {
+    const cloneTd = cloneSel.closest("td");
+    const cloneTr = cloneSel.closest("tr");
+
+    const rowIndex = Array.from(cloneTr.parentNode.children).indexOf(cloneTr);
+    const cloneColIndex = Array.from(cloneTd.parentNode.children).indexOf(
+      cloneTd
+    );
+    const originalColIndex = keepIndices[cloneColIndex];
+
+    const originalRow = originalRows[rowIndex];
+    let val = "";
+    if (originalRow) {
+      const originalTd = originalRow.children[originalColIndex];
+      const originalSelect = originalTd
+        ? originalTd.querySelector("select")
+        : null;
+      if (originalSelect) {
+        const opt = originalSelect.options[originalSelect.selectedIndex];
+        val = (opt && (opt.value || opt.textContent || "")) || "";
+      }
+    }
+
+    const span = document.createElement("span");
+    span.textContent = val || "-";
+    span.style.display = "inline-block";
+    span.style.padding = "6px 8px";
+    span.style.minWidth = "28px";
+    span.style.textAlign = "center";
+    span.style.borderRadius = "6px";
+    span.style.fontWeight = "600";
+    span.style.boxSizing = "border-box";
+    span.style.width = "100px";
+
+    switch (val) {
+      case "5":
+        span.style.background = "#22c55e";
+        span.style.color = "#000";
+        break;
+      case "4":
+        span.style.background = "#fb923c";
+        span.style.color = "#000";
+        break;
+      case "3":
+        span.style.background = "#facc15";
+        span.style.color = "#000";
+        break;
+      case "2":
+        span.style.background = "#fca5a5";
+        span.style.color = "#000";
+        break;
+      case "1":
+        span.style.background = "#f87171";
+        span.style.color = "#000";
+        break;
+      case "0":
+        span.style.background = "#ef4444";
+        span.style.color = "#fff";
+        break;
+      default:
+        span.style.background = "#ffffff";
+        span.style.color = "#000";
+        break;
+    }
+
+    cloneSel.parentNode.replaceChild(span, cloneSel);
+  });
+
+  // 5) clone'ni vaqtincha DOMga qo'yamiz va screenshot olamiz
+  document.body.appendChild(clone);
+
+  setTimeout(() => {
+    domtoimage
+      .toPng(clone, { bgcolor: "#ffffff" })
+      .then((dataUrl) => {
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = "grades.png";
+        link.click();
+      })
+      .catch((err) => {
+        console.error("dom-to-image xatosi:", err);
+      })
+      .finally(() => {
+        if (clone.parentNode) clone.parentNode.removeChild(clone);
+      });
+  }, 150);
+};

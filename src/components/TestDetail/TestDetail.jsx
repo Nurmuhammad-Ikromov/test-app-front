@@ -14,7 +14,6 @@ const TestDetail = () => {
     const getTestDetail = async (id) => {
         const res = await API.get(`/test/${id}`)
         const data = await res.data
-        // console.log(data);
         setTestName(data?.title)
 
         setTest(Object.values(data.test))

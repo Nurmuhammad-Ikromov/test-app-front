@@ -22,6 +22,12 @@ import StudentListPage from "./pages/Teacher/StudentList/StudentListPage";
 import StudentResult from "./components/StudentResult/StudentResult";
 import Classes from "./pages/Teacher/Classes/Classes";
 import Grades from "./pages/Student/Grades/Grades";
+import DirectorHome from "./pages/Director/DirectorHome/DirectorHome";
+import Teachers from "./pages/Director/Teachers/Teachers";
+import SingleTeacher from "./pages/Director/SingleTeacher/SingleTeacher";
+import AllClasses from "./pages/Director/Classes/Classes";
+import AssignTeacher from "./pages/Director/AssignTeacher/AssignTeacher";
+import Subjects from "./pages/Director/Subjects/Subjects";
 
 function ProtectedRoute({ children, role }) {
   const storedRole = localStorage.getItem("role");
@@ -58,13 +64,14 @@ const router = createBrowserRouter([
     ),
     children: [
       {
-        path: "exams",
-        element: <StudentExams />,
-      },
-      {
         path: "grades",
         element: <Grades />,
       },
+      {
+        path: "exams",
+        element: <StudentExams />,
+      },
+
       {
         path: "profile",
         element: <Profile />,
@@ -185,6 +192,37 @@ const router = createBrowserRouter([
       {
         path: "classes",
         element: <Classes />,
+      },
+    ],
+  },
+
+  {
+    path: "/director",
+    element: (
+      <ProtectedRoute role={"director"}>
+        <DirectorHome />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "teachers",
+        element: <Teachers />,
+      },
+      {
+        path: "teachers/:teacherId",
+        element: <SingleTeacher />,
+      },
+      {
+        path: "classes",
+        element: <AllClasses />,
+      },
+      {
+        path: "assign-teacher",
+        element: <AssignTeacher />,
+      },
+      {
+        path: "subjects",
+        element: <Subjects />,
       },
     ],
   },
