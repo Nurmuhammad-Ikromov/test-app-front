@@ -78,28 +78,28 @@ export const handleScreenshot = () => {
 
   // 4) selectlarni span ga almashtiramiz
   const originalRows = Array.from(wrapper.querySelectorAll("tbody tr"));
-  const cloneSelects = Array.from(clone.querySelectorAll("select"));
+  // --- select va inputlarni span ga almashtirish
+  const cloneInputs = Array.from(clone.querySelectorAll("select, input"));
 
-  cloneSelects.forEach((cloneSel) => {
-    const cloneTd = cloneSel.closest("td");
-    const cloneTr = cloneSel.closest("tr");
-
-    const rowIndex = Array.from(cloneTr.parentNode.children).indexOf(cloneTr);
-    const cloneColIndex = Array.from(cloneTd.parentNode.children).indexOf(
-      cloneTd
-    );
-    const originalColIndex = keepIndices[cloneColIndex];
-
-    const originalRow = originalRows[rowIndex];
+  cloneInputs.forEach((el) => {
+    const td = el.closest("td");
+    const tr = el.closest("tr");
+    const rowIndex = Array.from(tr.parentNode.children).indexOf(tr);
+    const cloneColIndex = Array.from(td.parentNode.children).indexOf(td);
+    const originalRow = wrapper.querySelectorAll("tbody tr")[rowIndex];
     let val = "";
+
     if (originalRow) {
-      const originalTd = originalRow.children[originalColIndex];
-      const originalSelect = originalTd
-        ? originalTd.querySelector("select")
-        : null;
-      if (originalSelect) {
-        const opt = originalSelect.options[originalSelect.selectedIndex];
-        val = (opt && (opt.value || opt.textContent || "")) || "";
+      const originalTd = originalRow.children[keepIndices[cloneColIndex]];
+      if (originalTd) {
+        const originalSelect = originalTd.querySelector("select");
+        const originalInput = originalTd.querySelector("input");
+        if (originalSelect) {
+          const opt = originalSelect.options[originalSelect.selectedIndex];
+          val = opt?.value || opt?.textContent || "";
+        } else if (originalInput) {
+          val = originalInput.value || "";
+        }
       }
     }
 
@@ -111,6 +111,7 @@ export const handleScreenshot = () => {
     span.style.textAlign = "center";
     span.style.borderRadius = "6px";
     span.style.fontWeight = "600";
+    span.style.fontSize = "16px";
     span.style.boxSizing = "border-box";
     span.style.width = "100px";
 
@@ -145,7 +146,7 @@ export const handleScreenshot = () => {
         break;
     }
 
-    cloneSel.parentNode.replaceChild(span, cloneSel);
+    el.parentNode.replaceChild(span, el);
   });
 
   // 5) clone'ni vaqtincha DOMga qo'yamiz va screenshot olamiz
