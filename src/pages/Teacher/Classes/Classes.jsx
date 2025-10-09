@@ -35,8 +35,8 @@ const Classes = () => {
         const seen = new Set();
         subs.forEach((subj) => {
           const cls = subj.class;
-          if (cls && !seen.has(cls._id)) {
-            seen.add(cls._id);
+          if (cls && !seen.has(cls?._id)) {
+            seen.add(cls?._id);
             uniqueClasses.push(cls);
           }
         });
@@ -44,14 +44,14 @@ const Classes = () => {
         setClasses(uniqueClasses);
 
         if (uniqueClasses.length > 0) {
-          const firstClassId = uniqueClasses[0]._id;
+          const firstClassId = uniqueClasses[0]?._id;
           setSelectedClass(firstClassId);
 
           const relatedSubjects = subs.filter(
             (s) => s.class?._id === firstClassId
           );
           if (relatedSubjects.length > 0) {
-            setSelectedSubject(relatedSubjects[0]._id);
+            setSelectedSubject(relatedSubjects[0]?._id);
           }
         }
       } catch (err) {
@@ -318,89 +318,93 @@ const Classes = () => {
             <tbody>
               {classes
                 .find((el) => el._id === selectedClass)
-                ?.students.map((student, index) => (
-                  <tr key={student._id}>
-                    <td
-                      className="border p-2 sticky left-0 bg-gray-100 z-10 text-center"
-                      style={{ width: "50px" }}
-                    >
-                      {index + 1}
-                    </td>
-                    <td className="border p-2 sticky left-[50px] bg-gray-100 z-10">
-                      {student.first_name} {student.last_name}
-                    </td>
-                    {dates.map((d) => {
-                      const grade = gradesByDate[d]?.[student._id]?.toString();
-                      let bgColor = "bg-white text-black";
-
-                      if (grade !== undefined && grade !== "") {
-                        switch (grade) {
-                          case "5":
-                            bgColor = "bg-green-500 text-black";
-                            break;
-                          case "4":
-                            bgColor = "bg-orange-400 text-black";
-                            break;
-                          case "3":
-                            bgColor = "bg-yellow-300 text-black";
-                            break;
-                          case "2":
-                            bgColor = "bg-red-300 text-black";
-                            break;
-                          case "1":
-                            bgColor = "bg-red-400 text-black";
-                            break;
-                          case "0":
-                            bgColor = "bg-red-500 text-black";
-                            break;
-                        }
-                      }
-
-                      return (
-                        <td key={d} className="border p-2">
-                          <div className={bgColor}>
-                            {uiMode === "select" ? (
-                              <select
-                                value={grade ?? ""}
-                                onChange={(e) =>
-                                  handleGradeChange(
-                                    student._id,
-                                    d,
-                                    e.target.value
-                                  )
-                                }
-                                className="border rounded p-1 w-full bg-transparent"
-                              >
-                                <option value="">-</option>
-                                <option value="5">5</option>
-                                <option value="4">4</option>
-                                <option value="3">3</option>
-                                <option value="2">2</option>
-                                <option value="1">1</option>
-                                <option value="0">0</option>
-                              </select>
-                            ) : (
-                              <input
-                                type="number"
-                                min={0}
-                                max={5}
-                                value={grade ?? ""}
-                                onChange={(e) =>
-                                  handleGradeChange(
-                                    student._id,
-                                    d,
-                                    e.target.value
-                                  )
-                                }
-                                className="border rounded p-1 w-full text-center bg-transparent"
-                              />
-                            )}
-                          </div>
+                ?.students.map(
+                  (student, index) =>
+                    student && (
+                      <tr key={student._id}>
+                        <td
+                          className="border p-2 sticky left-0 bg-gray-100 z-10 text-center"
+                          style={{ width: "50px" }}
+                        >
+                          {index + 1}
                         </td>
-                      );
-                    })}
-                  </tr>
-                ))}
+                        <td className="border p-2 sticky left-[50px] bg-gray-100 z-10">
+                          {student.first_name} {student.last_name}
+                        </td>
+                        {dates.map((d) => {
+                          const grade =
+                            gradesByDate[d]?.[student._id]?.toString();
+                          let bgColor = "bg-white text-black";
+
+                          if (grade !== undefined && grade !== "") {
+                            switch (grade) {
+                              case "5":
+                                bgColor = "bg-green-500 text-black";
+                                break;
+                              case "4":
+                                bgColor = "bg-orange-400 text-black";
+                                break;
+                              case "3":
+                                bgColor = "bg-yellow-300 text-black";
+                                break;
+                              case "2":
+                                bgColor = "bg-red-300 text-black";
+                                break;
+                              case "1":
+                                bgColor = "bg-red-400 text-black";
+                                break;
+                              case "0":
+                                bgColor = "bg-red-500 text-black";
+                                break;
+                            }
+                          }
+
+                          return (
+                            <td key={d} className="border p-2">
+                              <div className={bgColor}>
+                                {uiMode === "select" ? (
+                                  <select
+                                    value={grade ?? ""}
+                                    onChange={(e) =>
+                                      handleGradeChange(
+                                        student._id,
+                                        d,
+                                        e.target.value
+                                      )
+                                    }
+                                    className="border rounded p-1 w-full bg-transparent"
+                                  >
+                                    <option value="">-</option>
+                                    <option value="5">5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                    <option value="1">1</option>
+                                    <option value="0">0</option>
+                                  </select>
+                                ) : (
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={5}
+                                    value={grade ?? ""}
+                                    onChange={(e) =>
+                                      handleGradeChange(
+                                        student._id,
+                                        d,
+                                        e.target.value
+                                      )
+                                    }
+                                    className="border rounded p-1 w-full text-center bg-transparent"
+                                  />
+                                )}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    )
+                )}
             </tbody>
           </table>
         )}
