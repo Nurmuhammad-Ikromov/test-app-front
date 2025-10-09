@@ -81,7 +81,7 @@ const Classes = () => {
         datesSet.add(dateStr);
 
         if (!gradesMap[dateStr]) gradesMap[dateStr] = {};
-        gradesMap[dateStr][grade.student._id] = grade.value;
+        gradesMap[dateStr][grade.student?._id] = grade.value;
       });
 
       setDates([...datesSet].sort());
