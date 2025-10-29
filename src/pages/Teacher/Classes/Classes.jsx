@@ -22,6 +22,32 @@ const Classes = () => {
   // Sinflar va fanlar yuklanmoqda
   const [loadingInitial, setLoadingInitial] = useState(true);
 
+  // === Modal uchun state ===
+  const [showKeepModal, setShowKeepModal] = useState(false);
+  // keepCount: nechta oxirgi sana ustunini saqlash (date ustunlari soni ichidan)
+  const [keepCount, setKeepCount] = useState(3);
+  const [keepError, setKeepError] = useState("");
+
+  // 🔹 Har bir talabaning o‘rtacha foizini hisoblash
+  const calculateAveragePercent = (studentId) => {
+    let total = 0;
+    let count = 0;
+
+    dates.forEach((d) => {
+      const grade = Number(gradesByDate[d]?.[studentId]);
+      if (!isNaN(grade)) {
+        total += grade;
+        count++;
+      }
+    });
+
+    if (count === 0) return "-";
+
+    // 5 - eng yuqori baho deb olaylik
+    const percent = (total / (count * 5)) * 100;
+    return percent.toFixed(1) + "%";
+  };
+
   // 🔹 Sinflar va fanlarni birinchi marta olish
   useEffect(() => {
     const fetchInitial = async () => {
@@ -154,15 +180,30 @@ const Classes = () => {
     }
   };
 
-  // 🔹 UI
-  // if (loadingInitial) {
-  //   return (
-  //     <div className="flex items-center justify-center h-[400px] text-lg text-gray-500">
-  //       Sinflar yuklanmoqda...
-  //     </div>
-  //   );
-  // }
+  // === Modal confirm funksiyasi ===
+  const openKeepModal = () => {
+    // defaultni dates.length ga qarab moslashtiramiz (masalan 3 yoki mavjud date soni)
+    const defaultVal = Math.min(3, dates.length);
+    setKeepCount(defaultVal);
+    setKeepError("");
+    setShowKeepModal(true);
+  };
 
+  const confirmKeepAndScreenshot = () => {
+    // validatsiya: keepCount 0..dates.length bo'lishi kerak
+    const max = Math.max(0, dates.length);
+    const val = Number(keepCount);
+    if (Number.isNaN(val) || val < 0 || val > max) {
+      setKeepError(`Iltimos 0 dan ${max} gacha son kiriting.`);
+      return;
+    }
+
+    // chaqiramiz
+    handleScreenshot(val);
+    setShowKeepModal(false);
+  };
+
+  // === UI ===
   console.log(unsavedChanges);
 
   return (
@@ -190,27 +231,6 @@ const Classes = () => {
           </div>
         )}
       </div>
-
-      {/* Fan tanlash */}
-      {/* {selectedClass && (
-        <div className="mb-4">
-          <label className="font-semibold">Fan: </label>
-          <select
-            value={selectedSubject || ""}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            className="border p-2 rounded"
-          >
-            <option value="">Tanlang</option>
-            {subjects
-              .filter((s) => s.class?._id === selectedClass)
-              .map((subj) => (
-                <option key={subj._id} value={subj._id}>
-                  {subj.name}
-                </option>
-              ))}
-          </select>
-        </div>
-      )} */}
 
       {/* Jadval ustidagi toolbar */}
       <div className="flex justify-between mb-4 items-center">
@@ -271,12 +291,14 @@ const Classes = () => {
             Saqlash
           </button>
 
+          {/* Endi bu tugma modalni ochadi */}
           <button
-            onClick={handleScreenshot}
+            onClick={openKeepModal}
             className="px-4 py-2 bg-purple-600 text-white rounded"
           >
             Screenshot 📸
           </button>
+
           <button
             onClick={() => fetchGrades(selectedClass)}
             className={`px-4 py-2 text-white rounded ${
@@ -299,22 +321,31 @@ const Classes = () => {
           </div>
         ) : (
           <table className="w-full border-collapse table-auto relative">
-            <thead className="bg-gray-200 sticky top-0 z-20">
+            <thead className="bg-gray-200 z-20">
               <tr>
                 <th
-                  className="border p-2 bg-gray-200 z-30"
+                  className="border p-2 bg-gray-200 z-30 sticky left-0 top-0"
                   style={{ width: "50px" }}
                 >
                   T/R
                 </th>
-                <th className="border p-2 bg-gray-200 z-30">O‘quvchi</th>
+                <th className="border p-2 bg-gray-200 z-30 sticky left-[44px] top-0">
+                  O‘quvchi
+                </th>
                 {dates.map((d) => (
-                  <th key={d} className="border p-2">
+                  <th key={d} className="border p-2 sticky top-0 bg-gray-200">
                     {new Date(d).toLocaleDateString("en-GB")}
                   </th>
                 ))}
+                <th
+                  className="border p-2 bg-gray-200 sticky right-0 top-0 z-40"
+                  style={{ minWidth: "120px" }}
+                >
+                  O‘rtacha
+                </th>
               </tr>
             </thead>
+
             <tbody>
               {classes
                 .find((el) => el._id === selectedClass)
@@ -402,6 +433,14 @@ const Classes = () => {
                             </td>
                           );
                         })}
+
+                        {/* 🔹 Yangi ustun — o‘rtacha foiz */}
+                        <td
+                          className="border p-2 text-center font-semibold bg-gray-100 sticky right-0 z-20"
+                          style={{ minWidth: "120px" }}
+                        >
+                          {calculateAveragePercent(student._id)}
+                        </td>
                       </tr>
                     )
                 )}
@@ -409,6 +448,63 @@ const Classes = () => {
           </table>
         )}
       </div>
+
+      {/* ================= Modal ================= */}
+      {showKeepModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black opacity-40"
+            onClick={() => setShowKeepModal(false)}
+          />
+          <div className="relative bg-white rounded-lg p-6 w-[360px] shadow-lg z-60">
+            <h3 className="text-lg font-semibold mb-2">
+              Screenshot sozlamalari
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Nechta <strong>oxirgi</strong> sanani saqlamoqchisiz? (0 — hech
+              biri)
+            </p>
+
+            <div className="flex items-center gap-2 mb-3">
+              <input
+                type="number"
+                min={0}
+                max={dates.length}
+                value={keepCount}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setKeepCount(v === "" ? "" : Number(v));
+                  setKeepError("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") confirmKeepAndScreenshot();
+                }}
+                className="border p-2 rounded w-full"
+              />
+              <div className="text-sm text-gray-500">{`/ ${dates.length}`}</div>
+            </div>
+
+            {keepError && (
+              <div className="text-sm text-red-500 mb-2">{keepError}</div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowKeepModal(false)}
+                className="px-4 py-2 rounded border"
+              >
+                Bekor qilish
+              </button>
+              <button
+                onClick={confirmKeepAndScreenshot}
+                className="px-4 py-2 rounded bg-blue-600 text-white"
+              >
+                Saqlab olish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

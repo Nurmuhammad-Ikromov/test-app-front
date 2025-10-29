@@ -1,7 +1,7 @@
 import domtoimage from "dom-to-image";
 
 // 🔹 To‘liq screenshot olish
-export const handleScreenshot = () => {
+export const handleScreenshot = (keepLast = 3) => {
   const wrapper = document.getElementById("grades-table");
   if (!wrapper) return;
 
@@ -9,16 +9,18 @@ export const handleScreenshot = () => {
   const originalThs = Array.from(wrapper.querySelectorAll("thead th"));
   const totalCols = originalThs.length;
 
-  // 🔹 T/R (0) va O'quvchi (1) ustunlarini albatta saqlaymiz
+  // 🔹 Har doim T/R (0) va O‘quvchi (1) ustunlarini saqlaymiz
   const keepIndices = [0, 1];
 
-  // 🔹 Oxirgi 3 ustunni ham saqlaymiz
-  if (totalCols > 2) {
-    const start = Math.max(2, totalCols - 3);
-    for (let i = start; i < totalCols; i++) keepIndices.push(i);
+  // 🔹 Parametr orqali kiritilgan oxirgi N ta ustunni saqlaymiz
+  if (totalCols > 2 && keepLast > 0) {
+    const start = Math.max(2, totalCols - keepLast - 1);
+    for (let i = start; i < totalCols - 1; i++) {
+      keepIndices.push(i);
+    }
   }
 
-  // 2) clone qilib, tashqi ko'rinishni sozlaymiz va offscreen joyga qo'yamiz
+  // 2) clone qilib, offscreen joyga qo‘yish
   const clone = wrapper.cloneNode(true);
   clone.style.overflow = "visible";
   clone.style.maxHeight = "none";
@@ -33,13 +35,13 @@ export const handleScreenshot = () => {
     .querySelectorAll(".sticky")
     .forEach((el) => el.classList.remove("sticky"));
 
-  // 3) clone ichidan originalga mos kelmaydigan ustunlarni o'chiramiz
+  // 3) clone ichidan kerakmas ustunlarni o‘chiramiz
   const cloneThs = Array.from(clone.querySelectorAll("thead th"));
   cloneThs.forEach((th, idx) => {
     if (!keepIndices.includes(idx)) th.remove();
   });
 
-  // har bir satrda ham tegishli ustunlarni o'chiramiz
+  // har bir satrdan kerakmas ustunlarni olib tashlaymiz
   const cloneRows = Array.from(clone.querySelectorAll("tbody tr"));
   cloneRows.forEach((tr) => {
     const tds = Array.from(tr.children);
@@ -48,25 +50,23 @@ export const handleScreenshot = () => {
     });
   });
 
-  // --- 0) Eng uzun ismni topamiz
+  // --- Eng uzun ismni topamiz
   const names = Array.from(
-    wrapper.querySelectorAll("tbody tr td:nth-child(2)") // 🔹 endi O‘quvchi ustuni 2-chi
+    wrapper.querySelectorAll("tbody tr td:nth-child(2)")
   ).map((td) => td.textContent.trim());
-
   let longestName = "";
   names.forEach((name) => {
     if (name.length > longestName.length) longestName = name;
   });
 
-  // Canvas orqali o'lchaymiz
+  // Canvas orqali o‘lchaymiz
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
   context.font = "16px Arial";
   const textWidth = context.measureText(longestName).width;
-
   const nameColWidth = Math.ceil(textWidth + 24);
 
-  // Clone ichidagi O‘quvchi ustuniga width qo'yamiz
+  // Clone ichidagi O‘quvchi ustuniga width qo‘yish
   Array.from(
     clone.querySelectorAll("thead th:nth-child(2), tbody td:nth-child(2)")
   ).forEach((cell) => {
@@ -76,11 +76,8 @@ export const handleScreenshot = () => {
     cell.style.whiteSpace = "nowrap";
   });
 
-  // 4) selectlarni span ga almashtiramiz
-  const originalRows = Array.from(wrapper.querySelectorAll("tbody tr"));
-  // --- select va inputlarni span ga almashtirish
+  // 4) select va inputlarni span ga almashtiramiz
   const cloneInputs = Array.from(clone.querySelectorAll("select, input"));
-
   cloneInputs.forEach((el) => {
     const td = el.closest("td");
     const tr = el.closest("tr");
@@ -118,23 +115,18 @@ export const handleScreenshot = () => {
     switch (val) {
       case "5":
         span.style.background = "#22c55e";
-        span.style.color = "#000";
         break;
       case "4":
         span.style.background = "#fb923c";
-        span.style.color = "#000";
         break;
       case "3":
         span.style.background = "#facc15";
-        span.style.color = "#000";
         break;
       case "2":
         span.style.background = "#fca5a5";
-        span.style.color = "#000";
         break;
       case "1":
         span.style.background = "#f87171";
-        span.style.color = "#000";
         break;
       case "0":
         span.style.background = "#ef4444";
@@ -142,14 +134,13 @@ export const handleScreenshot = () => {
         break;
       default:
         span.style.background = "#ffffff";
-        span.style.color = "#000";
         break;
     }
 
     el.parentNode.replaceChild(span, el);
   });
 
-  // 5) clone'ni vaqtincha DOMga qo'yamiz va screenshot olamiz
+  // 5) Screenshot olish
   document.body.appendChild(clone);
 
   setTimeout(() => {
