@@ -84,10 +84,10 @@ const router = createBrowserRouter([
             path: "info",
             element: <ProfileData />,
           },
-          // {
-          //   path: "history",
-          //   element: <History />,
-          // },
+          {
+            path: "history",
+            element: <History />,
+          },
         ],
       },
     ],
