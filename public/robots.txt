@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Google uchun sayt xaritasi manzili
+Sitemap: https://pdp-edu.netlify.app/sitemap.xml
+
+# Sayt haqida qisqacha ma'lumot
+# PDP Education — o‘quvchilar uchun imtihon topshirish va baholash tizimi
