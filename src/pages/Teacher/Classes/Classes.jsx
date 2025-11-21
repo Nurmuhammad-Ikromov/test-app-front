@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import API from "../../../utils/config";
 import { toast } from "react-toastify";
-import { handleScreenshot } from "../../../../helpers/handleScreenshotGrades";
+import { handleScreenshot } from "../../../helpers/handleScreenshotGrades";
 import { FaRedo } from "react-icons/fa";
 
 const Classes = () => {
