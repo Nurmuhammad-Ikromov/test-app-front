@@ -1,6 +1,6 @@
 import domtoimage from "dom-to-image";
 
-export const handleDailyStatsScreenshot = () => {
+const handleDailyStatsScreenshot = () => {
   const wrapper = document.getElementById("daily-stats-table");
   if (!wrapper) return;
 
