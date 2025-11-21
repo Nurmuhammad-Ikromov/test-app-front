@@ -1,7 +1,7 @@
 import domtoimage from "dom-to-image";
 
 // 🔹 To‘liq screenshot olish
-export const handleScreenshot = (keepLast = 3) => {
+export const handleDailyStatsScreenshot = (keepLast = 3) => {
   const wrapper = document.getElementById("grades-table");
   if (!wrapper) return;
 
