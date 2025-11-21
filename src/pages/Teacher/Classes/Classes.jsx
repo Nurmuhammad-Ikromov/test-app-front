@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import API from "../../../utils/config";
 import { toast } from "react-toastify";
-import { handleScreenshot } from "./helpers";
+import { handleScreenshot } from "../../../../helpers/handleScreenshotGrades";
 import { FaRedo } from "react-icons/fa";
 
 const Classes = () => {
@@ -14,21 +14,19 @@ const Classes = () => {
 
   const [dates, setDates] = useState([]);
   const [gradesByDate, setGradesByDate] = useState({});
-  const [unsavedChanges, setUnsavedChanges] = useState(false);
-  const [pendingGrades, setPendingGrades] = useState({});
+  const [attendanceByDate, setAttendanceByDate] = useState({});
 
-  // Jadval yuklanmoqda
+  const [pendingGrades, setPendingGrades] = useState({});
+  const [pendingAttendance, setPendingAttendance] = useState({});
+
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [loadingTable, setLoadingTable] = useState(true);
-  // Sinflar va fanlar yuklanmoqda
   const [loadingInitial, setLoadingInitial] = useState(true);
 
-  // === Modal uchun state ===
   const [showKeepModal, setShowKeepModal] = useState(false);
-  // keepCount: nechta oxirgi sana ustunini saqlash (date ustunlari soni ichidan)
   const [keepCount, setKeepCount] = useState(3);
   const [keepError, setKeepError] = useState("");
 
-  // 🔹 Har bir talabaning o‘rtacha foizini hisoblash
   const calculateAveragePercent = (studentId) => {
     let total = 0;
     let count = 0;
@@ -42,13 +40,11 @@ const Classes = () => {
     });
 
     if (count === 0) return "-";
-
-    // 5 - eng yuqori baho deb olaylik
     const percent = (total / (count * 5)) * 100;
     return percent.toFixed(1) + "%";
   };
 
-  // 🔹 Sinflar va fanlarni birinchi marta olish
+  // Initial load (subjects + classes)
   useEffect(() => {
     const fetchInitial = async () => {
       try {
@@ -62,7 +58,7 @@ const Classes = () => {
         subs.forEach((subj) => {
           const cls = subj.class;
           if (cls && !seen.has(cls?._id)) {
-            seen.add(cls?._id);
+            seen.add(cls._id);
             uniqueClasses.push(cls);
           }
         });
@@ -70,18 +66,13 @@ const Classes = () => {
         setClasses(uniqueClasses);
 
         if (uniqueClasses.length > 0) {
-          const firstClassId = uniqueClasses[0]?._id;
+          const firstClassId = uniqueClasses[0]._id;
           setSelectedClass(firstClassId);
 
-          const relatedSubjects = subs.filter(
-            (s) => s.class?._id === firstClassId
-          );
-          if (relatedSubjects.length > 0) {
-            setSelectedSubject(relatedSubjects[0]?._id);
-          }
+          const related = subs.filter((s) => s.class?._id === firstClassId);
+          if (related.length > 0) setSelectedSubject(related[0]._id);
         }
       } catch (err) {
-        console.error(err);
         toast.error("Ma'lumotlarni yuklashda xatolik ❌");
       } finally {
         setLoadingInitial(false);
@@ -91,128 +82,173 @@ const Classes = () => {
     fetchInitial();
   }, []);
 
-  // 🔹 Jadvalni olish funksiyasi
+  // Fetch attendance
+  const fetchAttendance = async (classId, subjectId, datesArr) => {
+    if (!classId || !subjectId || !datesArr.length) {
+      setAttendanceByDate({});
+      return;
+    }
+
+    try {
+      const qs = datesArr.join(",");
+      const res = await API.get("/attendance/list", {
+        params: { classId, subjectId, dates: qs },
+      });
+      setAttendanceByDate(res.data || {});
+    } catch (err) {
+      console.error(err);
+      toast.error("Davomatni yuklashda xatolik ❌");
+    }
+  };
+
+  // Fetch grades + then attendance
   const fetchGrades = async (classId) => {
     try {
       setLoadingTable(true);
       const res = await API.get(`/grades/class/${classId}`);
       const grades = res.data.grades || [];
+
       const datesSet = new Set();
-      const gradesMap = {};
+      const gmap = {};
 
-      grades.forEach((grade) => {
-        const d = new Date(grade.date);
-        const dateStr = d.toISOString().split("T")[0];
+      grades.forEach((g) => {
+        const d = new Date(g.date).toISOString().split("T")[0];
+        datesSet.add(d);
 
-        datesSet.add(dateStr);
-
-        if (!gradesMap[dateStr]) gradesMap[dateStr] = {};
-        gradesMap[dateStr][grade.student?._id] = grade.value;
+        if (!gmap[d]) gmap[d] = {};
+        gmap[d][g.student?._id] = g.value;
       });
 
-      setDates([...datesSet].sort());
-      setGradesByDate(gradesMap);
+      const sorted = [...datesSet].sort();
+      setDates(sorted);
+      setGradesByDate(gmap);
+
+      if (selectedSubject)
+        await fetchAttendance(classId, selectedSubject, sorted);
     } catch (err) {
-      console.error(err);
       toast.error("Baholarni yuklashda xatolik ❌");
     } finally {
       setLoadingTable(false);
     }
   };
 
-  // 🔹 Sinf tanlanganda jadvalni yangilash
   useEffect(() => {
     if (selectedClass) fetchGrades(selectedClass);
   }, [selectedClass]);
 
-  // 🔹 Sana qo‘shish
+  // Add new date (WE REMOVED /attendance/generate)
   const addDate = (formatted) => {
     if (!dates.includes(formatted)) {
       const updated = [...dates, formatted].sort();
       setDates(updated);
+      fetchAttendance(selectedClass, selectedSubject, updated);
       setUnsavedChanges(true);
     }
   };
 
-  // 🔹 Local baho o‘zgartirish
+  // Local grade change
   const handleGradeChange = (studentId, date, value) => {
     setGradesByDate((prev) => {
-      const copy = { ...prev };
-      if (!copy[date]) copy[date] = {};
-      if (value === "") delete copy[date][studentId];
-      else copy[date][studentId] = value;
-      return copy;
+      const c = { ...prev };
+      if (!c[date]) c[date] = {};
+      if (value === "") delete c[date][studentId];
+      else c[date][studentId] = value;
+      return c;
     });
 
     setPendingGrades((prev) => {
-      const copy = { ...prev };
-      if (!copy[date]) copy[date] = {};
-      copy[date][studentId] = value === "" ? null : value;
-      return copy;
+      const c = { ...prev };
+      if (!c[date]) c[date] = {};
+      c[date][studentId] = value === "" ? null : value;
+      return c;
     });
 
     setUnsavedChanges(true);
   };
 
-  // 🔹 Hammasini saqlash
-  const handleSave = async () => {
-    const changes = [];
-    Object.entries(pendingGrades).forEach(([date, students]) => {
-      Object.entries(students).forEach(([studentId, value]) => {
-        changes.push({ studentId, date, value });
-      });
+  // Local attendance change
+  const handleAttendanceChange = (studentId, date, status) => {
+    setPendingAttendance((prev) => {
+      const c = { ...prev };
+      if (!c[date]) c[date] = {};
+      c[date][studentId] = status;
+      return c;
     });
+    setUnsavedChanges(true);
+  };
 
-    if (changes.length === 0) return;
+  // Save both grades + attendance
+  const handleSave = async () => {
+    const gradeChanges = [];
+    Object.entries(pendingGrades).forEach(([date, students]) =>
+      Object.entries(students).forEach(([studentId, value]) =>
+        gradeChanges.push({ studentId, date, value })
+      )
+    );
+
+    const attChanges = [];
+    Object.entries(pendingAttendance).forEach(([date, students]) =>
+      Object.entries(students).forEach(([studentId, status]) =>
+        attChanges.push({ studentId, date, status })
+      )
+    );
 
     try {
-      await API.post("/grades/bulk", {
-        classId: selectedClass,
-        subjectId: selectedSubject,
-        changes,
-      });
+      if (gradeChanges.length) {
+        await API.post("/grades/bulk", {
+          classId: selectedClass,
+          subjectId: selectedSubject,
+          changes: gradeChanges,
+        });
+      }
+
+      if (attChanges.length) {
+        await API.post("/attendance/bulk", {
+          classId: selectedClass,
+          subjectId: selectedSubject,
+          changes: attChanges,
+        });
+      }
+
+      await fetchGrades(selectedClass);
+      await fetchAttendance(selectedClass, selectedSubject, dates);
+
       setPendingGrades({});
+      setPendingAttendance({});
       setUnsavedChanges(false);
-      toast.success("Baholar saqlab qo‘yildi ✅");
+      toast.success("Ma'lumotlar saqlandi ✅");
     } catch (err) {
-      console.error(err);
-      toast.error("Xatolik yuz berdi ❌");
+      toast.error("Saqlashda xatolik ❌");
     }
   };
 
-  // === Modal confirm funksiyasi ===
+  // Screenshot modal
   const openKeepModal = () => {
-    // defaultni dates.length ga qarab moslashtiramiz (masalan 3 yoki mavjud date soni)
-    const defaultVal = Math.min(3, dates.length);
-    setKeepCount(defaultVal);
+    setKeepCount(Math.min(3, dates.length));
     setKeepError("");
     setShowKeepModal(true);
   };
 
   const confirmKeepAndScreenshot = () => {
-    // validatsiya: keepCount 0..dates.length bo'lishi kerak
-    const max = Math.max(0, dates.length);
     const val = Number(keepCount);
+    const max = dates.length;
+
     if (Number.isNaN(val) || val < 0 || val > max) {
-      setKeepError(`Iltimos 0 dan ${max} gacha son kiriting.`);
+      setKeepError(`0 dan ${max} gacha son kiriting.`);
       return;
     }
 
-    // chaqiramiz
     handleScreenshot(val);
     setShowKeepModal(false);
   };
 
-  // === UI ===
-  // console.log(unsavedChanges);
-
   return (
     <div className="p-6 bg-white">
-      {/* Sinf tanlash */}
+      {/* CLASS SELECT */}
       <div className="flex items-center gap-4 mb-4">
-        <label className="font-semibold block mb-2">Sinf:</label>
+        <label className="font-semibold">Sinf:</label>
         {loadingInitial ? (
-          "Sinflar yuklanmoqda..."
+          "Yuklanmoqda..."
         ) : (
           <div className="flex flex-wrap gap-2">
             {classes.map((cls) => (
@@ -232,48 +268,46 @@ const Classes = () => {
         )}
       </div>
 
-      {/* Jadval ustidagi toolbar */}
+      {/* TOP TOOLBAR */}
       <div className="flex justify-between mb-4 items-center">
         <div>
-          <label htmlFor="date" className="font-semibold">
-            Sana qo‘shish:
-          </label>
+          <label className="font-semibold">Sana qo'shish:</label>
           <input
-            id="date"
             type="date"
             onChange={(e) => {
               const val = e.target.value;
-              if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
-                const year = parseInt(val.split("-")[0], 10);
-                if (year >= 2000 && year < 3000) addDate(val);
-              }
+              if (/^\d{4}-\d{2}-\d{2}$/.test(val)) addDate(val);
             }}
             className="border p-2 rounded"
           />
         </div>
 
         <div className="flex items-center gap-4">
-          <label className="font-semibold">UI rejim:</label>
-          <div className="flex rounded-lg overflow-hidden border">
+          <label className="font-semibold">UI:</label>
+          <div className="flex rounded overflow-hidden border">
             <button
               onClick={() => setUiMode("select")}
-              className={`px-4 py-2 transition ${
-                uiMode === "select"
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-100"
+              className={`px-4 py-2 ${
+                uiMode === "select" ? "bg-blue-600 text-white" : "bg-white"
               }`}
             >
               Select
             </button>
             <button
               onClick={() => setUiMode("input")}
-              className={`px-4 py-2 transition ${
-                uiMode === "input"
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-100"
+              className={`px-4 py-2 ${
+                uiMode === "input" ? "bg-blue-600 text-white" : "bg-white"
               }`}
             >
               Input
+            </button>
+            <button
+              onClick={() => setUiMode("davomat")}
+              className={`px-4 py-2 ${
+                uiMode === "davomat" ? "bg-blue-600 text-white" : "bg-white"
+              }`}
+            >
+              Davomat
             </button>
           </div>
         </div>
@@ -281,17 +315,16 @@ const Classes = () => {
         <div className="flex gap-2">
           <button
             onClick={handleSave}
+            disabled={!unsavedChanges || loadingTable}
             className={`px-4 py-2 rounded shadow ${
               unsavedChanges && !loadingTable
                 ? "bg-blue-600 text-white"
-                : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                : "bg-gray-400 text-gray-200"
             }`}
-            disabled={!unsavedChanges || loadingTable}
           >
             Saqlash
           </button>
 
-          {/* Endi bu tugma modalni ochadi */}
           <button
             onClick={openKeepModal}
             className="px-4 py-2 bg-purple-600 text-white rounded"
@@ -302,7 +335,7 @@ const Classes = () => {
           <button
             onClick={() => fetchGrades(selectedClass)}
             className={`px-4 py-2 text-white rounded ${
-              loadingTable ? `bg-gray-500` : `bg-blue-500`
+              loadingTable ? "bg-gray-500" : "bg-blue-500"
             }`}
           >
             <FaRedo />
@@ -310,26 +343,21 @@ const Classes = () => {
         </div>
       </div>
 
-      {/* Jadval */}
+      {/* TABLE */}
       <div
         id="grades-table"
         className="overflow-auto max-h-[500px] border border-gray-300 rounded max-w-[1250px]"
       >
         {loadingTable ? (
           <div className="flex items-center justify-center h-[500px]">
-            <span className="text-gray-500 text-lg">Jadval yuklanmoqda...</span>
+            <span className="text-gray-500 text-lg">Yuklanmoqda...</span>
           </div>
         ) : (
           <table className="w-full border-collapse table-auto relative">
-            <thead className="bg-gray-200 z-20">
+            <thead className="bg-gray-200 sticky top-0 z-20">
               <tr>
-                <th
-                  className="border p-2 bg-gray-200 z-30 sticky left-0 top-0"
-                  style={{ width: "50px" }}
-                >
-                  T/R
-                </th>
-                <th className="border p-2 bg-gray-200 z-30 sticky left-[44px] top-0">
+                <th className="border p-2 sticky left-0 bg-gray-200">T/R</th>
+                <th className="border p-2 sticky left-[44px] bg-gray-200">
                   O‘quvchi
                 </th>
                 {dates.map((d) => (
@@ -337,10 +365,7 @@ const Classes = () => {
                     {new Date(d).toLocaleDateString("en-GB")}
                   </th>
                 ))}
-                <th
-                  className="border p-2 bg-gray-200 sticky right-0 top-0 z-40"
-                  style={{ minWidth: "120px" }}
-                >
+                <th className="border p-2 sticky right-0 bg-gray-200 min-w-[120px]">
                   O‘rtacha
                 </th>
               </tr>
@@ -349,120 +374,181 @@ const Classes = () => {
             <tbody>
               {classes
                 .find((el) => el._id === selectedClass)
-                ?.students.map(
-                  (student, index) =>
-                    student && (
-                      <tr key={student._id}>
-                        <td
-                          className="border p-2 sticky left-0 bg-gray-100 z-10 text-center"
-                          style={{ width: "50px" }}
-                        >
-                          {index + 1}
-                        </td>
-                        <td className="border p-2 sticky left-[50px] bg-gray-100 z-10">
-                          {student.first_name} {student.last_name}
-                        </td>
-                        {dates.map((d) => {
-                          const grade =
-                            gradesByDate[d]?.[student._id]?.toString();
-                          let bgColor = "bg-white text-black";
+                ?.students.map((student, index) => (
+                  <tr key={student?._id}>
+                    <td className="border p-2 sticky left-0 bg-gray-100 text-center">
+                      {index + 1}
+                    </td>
 
-                          if (grade !== undefined && grade !== "") {
-                            switch (grade) {
-                              case "5":
-                                bgColor = "bg-green-500 text-black";
-                                break;
-                              case "4":
-                                bgColor = "bg-orange-400 text-black";
-                                break;
-                              case "3":
-                                bgColor = "bg-yellow-300 text-black";
-                                break;
-                              case "2":
-                                bgColor = "bg-red-300 text-black";
-                                break;
-                              case "1":
-                                bgColor = "bg-red-400 text-black";
-                                break;
-                              case "0":
-                                bgColor = "bg-red-500 text-black";
-                                break;
-                            }
-                          }
+                    <td className="border p-2 sticky left-[50px] bg-gray-100">
+                      {student?.first_name} {student?.last_name}
+                    </td>
 
-                          return (
-                            <td key={d} className="border p-2">
-                              <div className={bgColor}>
-                                {uiMode === "select" ? (
-                                  <select
-                                    value={grade ?? ""}
-                                    onChange={(e) =>
-                                      handleGradeChange(
-                                        student._id,
-                                        d,
-                                        e.target.value
-                                      )
-                                    }
-                                    className="border rounded p-1 w-full bg-transparent"
-                                  >
-                                    <option value="">-</option>
-                                    <option value="5">5</option>
-                                    <option value="4">4</option>
-                                    <option value="3">3</option>
-                                    <option value="2">2</option>
-                                    <option value="1">1</option>
-                                    <option value="0">0</option>
-                                  </select>
-                                ) : (
-                                  <input
-                                    type="number"
-                                    min={0}
-                                    max={5}
-                                    value={grade ?? ""}
-                                    onChange={(e) =>
-                                      handleGradeChange(
-                                        student._id,
-                                        d,
-                                        e.target.value
-                                      )
-                                    }
-                                    className="border rounded p-1 w-full text-center bg-transparent"
-                                  />
-                                )}
-                              </div>
-                            </td>
-                          );
-                        })}
+                    {dates.map((d) => {
+                      const grade = gradesByDate[d]?.[student._id]?.toString();
+                      let bgColor = "bg-white";
 
-                        {/* 🔹 Yangi ustun — o‘rtacha foiz */}
-                        <td
-                          className="border p-2 text-center font-semibold bg-gray-100 sticky right-0 z-20"
-                          style={{ minWidth: "120px" }}
-                        >
-                          {calculateAveragePercent(student._id)}
+                      // grade coloring
+                      if (grade !== undefined && grade !== "") {
+                        bgColor =
+                          {
+                            5: "bg-green-500",
+                            4: "bg-orange-400",
+                            3: "bg-yellow-300",
+                            2: "bg-red-300",
+                            1: "bg-red-400",
+                            0: "bg-red-500",
+                          }[grade] || "bg-white";
+                      }
+
+                      return (
+                        <td key={d} className="border p-2">
+                          {uiMode === "davomat" ? (
+                            // 🔥 Davomat uchun maxsus oq fon — baho ranglari ta’sir qilmaydi
+                            <div className="bg-white">
+                              {(() => {
+                                const attendanceStatus =
+                                  pendingAttendance[d]?.[student._id] ??
+                                  attendanceByDate[d]?.[student._id] ??
+                                  (gradesByDate[d]?.[student._id] != null
+                                    ? "present"
+                                    : "absent");
+
+                                const makeButton = (status, color) => {
+                                  const isActive = attendanceStatus === status;
+                                  return `
+            ${color}
+            text-white 
+            px-2 py-1 
+            rounded 
+            transition 
+            duration-150
+            ${isActive ? "opacity-100 ring-2 ring-black/20" : "opacity-40"}
+          `;
+                                };
+
+                                return (
+                                  <div className="flex gap-2 justify-center">
+                                    <button
+                                      onClick={() =>
+                                        handleAttendanceChange(
+                                          student._id,
+                                          d,
+                                          "present"
+                                        )
+                                      }
+                                      className={makeButton(
+                                        "present",
+                                        "bg-green-500"
+                                      )}
+                                    >
+                                      Bor
+                                    </button>
+
+                                    <button
+                                      onClick={() =>
+                                        handleAttendanceChange(
+                                          student._id,
+                                          d,
+                                          "late"
+                                        )
+                                      }
+                                      className={makeButton(
+                                        "late",
+                                        "bg-yellow-400"
+                                      )}
+                                    >
+                                      Kech
+                                    </button>
+
+                                    <button
+                                      onClick={() =>
+                                        handleAttendanceChange(
+                                          student._id,
+                                          d,
+                                          "absent"
+                                        )
+                                      }
+                                      className={makeButton(
+                                        "absent",
+                                        "bg-red-500"
+                                      )}
+                                    >
+                                      Yo‘q
+                                    </button>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          ) : (
+                            // 🔥 Select/Input uchun — baho ranglari ishlaydi
+                            <div className={bgColor}>
+                              {uiMode === "select" ? (
+                                <select
+                                  value={grade ?? ""}
+                                  onChange={(e) =>
+                                    handleGradeChange(
+                                      student._id,
+                                      d,
+                                      e.target.value
+                                    )
+                                  }
+                                  className="border rounded p-1 w-full bg-transparent"
+                                >
+                                  <option value="">-</option>
+                                  <option value="5">5</option>
+                                  <option value="4">4</option>
+                                  <option value="3">3</option>
+                                  <option value="2">2</option>
+                                  <option value="1">1</option>
+                                  <option value="0">0</option>
+                                </select>
+                              ) : (
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={5}
+                                  value={grade ?? ""}
+                                  onChange={(e) =>
+                                    handleGradeChange(
+                                      student._id,
+                                      d,
+                                      e.target.value
+                                    )
+                                  }
+                                  className="border rounded p-1 w-full text-center bg-transparent"
+                                />
+                              )}
+                            </div>
+                          )}
                         </td>
-                      </tr>
-                    )
-                )}
+                      );
+                    })}
+
+                    <td className="border p-2 text-center font-semibold bg-gray-100 sticky right-0">
+                      {calculateAveragePercent(student._id)}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         )}
       </div>
 
-      {/* ================= Modal ================= */}
+      {/* MODAL */}
       {showKeepModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
             className="absolute inset-0 bg-black opacity-40"
             onClick={() => setShowKeepModal(false)}
           />
+
           <div className="relative bg-white rounded-lg p-6 w-[360px] shadow-lg z-60">
             <h3 className="text-lg font-semibold mb-2">
               Screenshot sozlamalari
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              Nechta <strong>oxirgi</strong> sanani saqlamoqchisiz? (0 — hech
-              biri)
+              Nechta <strong>oxirgi</strong> sanani olish? (0 — hech biri)
             </p>
 
             <div className="flex items-center gap-2 mb-3">
@@ -471,17 +557,14 @@ const Classes = () => {
                 min={0}
                 max={dates.length}
                 value={keepCount}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setKeepCount(v === "" ? "" : Number(v));
-                  setKeepError("");
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") confirmKeepAndScreenshot();
-                }}
+                onChange={(e) =>
+                  setKeepCount(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
                 className="border p-2 rounded w-full"
               />
-              <div className="text-sm text-gray-500">{`/ ${dates.length}`}</div>
+              <div className="text-sm text-gray-500">/ {dates.length}</div>
             </div>
 
             {keepError && (

@@ -80,7 +80,7 @@ const History = ({ id }) => {
   const formattedData = data.map((item, index) => ({
     _id: index + 1,
     examTitle: item?.exam?.title,
-    student: `${item.who.first_name} ${item.who.last_name}`,
+    student: `${item.who?.first_name} ${item.who?.last_name}`,
     date: new Date(item.createdAt).toLocaleDateString("en-GB"),
     status: item.status,
     score: item.grade?.grade || 0,

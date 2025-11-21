@@ -113,7 +113,7 @@ const Teachers = () => {
               className="p-3 bg-gray-100 rounded-md shadow-sm flex justify-between items-center"
             >
               <span>
-                {teacher.first_name} {teacher.last_name} ({teacher.username})
+                {teacher?.first_name} {teacher?.last_name} ({teacher?.username})
               </span>
               <div className="space-x-2">
                 <button

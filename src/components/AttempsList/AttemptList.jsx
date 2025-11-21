@@ -125,7 +125,7 @@ const AttemptList = () => {
       case "class.name":
         return row.class?.name || "N/A";
       case "who":
-        return row.who.first_name + " " + row.who.last_name || "Teacher";
+        return row.who?.first_name + " " + row.who?.last_name || "Teacher";
       case "actions":
         return (
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>

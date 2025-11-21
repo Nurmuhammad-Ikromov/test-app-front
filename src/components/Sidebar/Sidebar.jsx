@@ -59,9 +59,10 @@ const Sidebar = ({ role }) => {
   ];
 
   return (
-    <div className="sidebar h-screen bg-gray-900 text-white flex flex-col p-5">
+    // Sidebar hidden on small screens, shows on md+
+    <div className="sidebar hidden md:flex h-screen bg-gray-900 text-white flex-col p-4 w-56">
       {/* Logo */}
-      <h1 className="text-2xl font-bold mb-10 flex items-center gap-1">
+      <h1 className="text-2xl font-bold mb-8 flex items-center gap-1">
         PDPedu
       </h1>
 

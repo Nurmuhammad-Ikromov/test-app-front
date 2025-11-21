@@ -28,6 +28,7 @@ import SingleTeacher from "./pages/Director/SingleTeacher/SingleTeacher";
 import AllClasses from "./pages/Director/Classes/Classes";
 import AssignTeacher from "./pages/Director/AssignTeacher/AssignTeacher";
 import Subjects from "./pages/Director/Subjects/Subjects";
+import SingleClass from "./pages/SingleClass/SingleClass";
 
 function ProtectedRoute({ children, role }) {
   const storedRole = localStorage.getItem("role");
@@ -215,6 +216,10 @@ const router = createBrowserRouter([
       {
         path: "classes",
         element: <AllClasses />,
+      },
+      {
+        path: "classes/:classId",
+        element: <SingleClass />,
       },
       {
         path: "assign-teacher",
