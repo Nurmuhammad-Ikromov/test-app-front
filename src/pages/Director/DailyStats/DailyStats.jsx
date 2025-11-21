@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import API from "../../../utils/config";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { handleDailyStatsScreenshot } from "../../../helpers/DailyStatsScreenshot";
+import { handleDailyStatsScreenshot } from "./dailyStatsScreenshot";  
 
 const DailyStats = () => {
   const { classId } = useParams();
