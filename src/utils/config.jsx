@@ -2,9 +2,9 @@ import axios from "axios";
 
 const API = axios.create({
   // baseURL: "https://test-app-d1ps.onrender.com"
-  // baseURL: "https://test-pdp-backend.onrender.com",
+  baseURL: "https://test-pdp-backend.onrender.com",
   // baseURL: "http://localhost:3000",
-  baseURL: "http://13.60.197.255:3000/",
+  // baseURL: "http://13.60.197.255:3000/",
 });
 
 API.interceptors.request.use(
