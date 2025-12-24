@@ -41,6 +41,10 @@ const ExamPage = () => {
   const [result, setResult] = useState(null);
   const [type, setType] = useState("");
 
+  useEffect(()=> {
+    console.log(questions);
+    
+  }, [questions])
   // Fetch exam questions and shuffle options
   const fetchExamQuestions = async () => {
     try {
