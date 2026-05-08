@@ -1,211 +1,100 @@
 /** @format */
-
-import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FiBookOpen, FiMoreVertical, FiPlus, FiTrash2 } from "react-icons/fi";
-// MUI komponentlarini import qilamiz
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-} from "@mui/material";
+import React, { useState } from "react";
+import { Link, Outlet } from "react-router-dom";
+import Navbar from "../../../components/Navbar/Navbar";
+import { FiPlus, FiSearch } from "react-icons/fi";
 
 const TestListPage = () => {
-  const navigate = useNavigate();
-  const [openMenuId, setOpenMenuId] = useState(null);
-  const menuRef = useRef(null);
-
-  // Modal uchun holatlar (State)
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedTestId, setSelectedTestId] = useState(null);
-
-  const [tests, setTests] = useState([
-    { id: 1, name: "Kamron uchun", status: "Enabled", date: "30.04.2026" },
-    { id: 2, name: "React 1", status: "Enabled", date: "30.04.2026" },
-    { id: 3, name: "11-C Uz English", status: "Enabled", date: "29.04.2026" },
-    { id: 4, name: "11-B Ru English", status: "Enabled", date: "29.04.2026" },
-    { id: 5, name: "10-D Uz English", status: "Enabled", date: "29.04.2026" },
-    { id: 6, name: "10-A Ru English", status: "Enabled", date: "29.04.2026" },
-  ]);
-
-  // --- FUNKSIYALAR ---
-
-  // 1. O'chirish modalini ochish
-  const openDeleteModal = (id) => {
-    setSelectedTestId(id);
-    setDeleteModalOpen(true);
-    setOpenMenuId(null);
-  };
-
-  // 2. Modal ichida tasdiqlanganda o'chirish
-  const confirmDelete = () => {
-    setTests(tests.filter((test) => test.id !== selectedTestId));
-    setDeleteModalOpen(false);
-    setSelectedTestId(null);
-  };
-
-  const handleCreateExam = (id) => {
-    navigate(`/teacher/tests/${id}/start`);
-    setOpenMenuId(null);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target))
-        setOpenMenuId(null);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  // 1. Sahifa holatini boshqarish uchun State
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = 3; // Sahifalar soni (buni dinamik qilsangiz ham bo'ladi)
 
   return (
     <div className="p-8 bg-[#F8F9FB] min-h-screen font-sans text-[#1B2559]">
-      <div className="flex justify-between items-end mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Testlar</h1>
-          <p className="text-sm text-[#A3AED0] font-medium mt-1">
-            Barcha testlar ro'yxati
-          </p>
+      {/* HEADER QISMI */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Testlar</h1>
+            <p className="text-sm text-[#A3AED0] font-medium mt-1 uppercase tracking-wider">
+              Barcha testlar va natijalar
+            </p>
+          </div>
+          <Link
+            to="/teacher/tests/create"
+            className="bg-[#4318FF] text-white px-7 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-[#3311CC] transition-all flex items-center gap-2 transform hover:scale-105 active:scale-95"
+          >
+            <FiPlus size={20} /> Yangi test
+          </Link>
         </div>
-        <Link
-          to="/teacher/tests/create"
-          className="bg-[#4318FF] text-white px-7 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-[#3311CC] transition-all flex items-center gap-2"
-        >
-          <span className="text-xl">+</span> Yangi test
-        </Link>
+
+        {/* SEARCH & FILTERS */}
+        <div className="bg-white p-4 rounded-[24px] shadow-sm flex justify-between items-center gap-4">
+          <div className="relative flex-1">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-[#A3AED0]">
+              <FiSearch size={20} />
+            </span>
+            <input
+              type="text"
+              placeholder="Test qidirish..."
+              className="w-full pl-12 pr-4 py-2.5 bg-[#F4F7FE] border-none rounded-2xl focus:ring-2 focus:ring-purple-400 outline-none text-[#1B2559] font-medium placeholder:text-[#A3AED0]"
+            />
+          </div>
+          <div className="flex gap-3">
+            <select className="bg-white border border-gray-100 text-[#707EAE] px-5 py-2.5 rounded-2xl text-sm shadow-sm outline-none font-bold hover:text-[#4318FF] transition-colors cursor-pointer">
+              <option>Barcha fanlar</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div className="w-full overflow-x-auto overflow-y-visible pb-24">
-        <table className="w-full border-separate border-spacing-y-4">
-          <thead>
-            <tr className="text-[#A3AED0] text-[13px] font-bold uppercase tracking-widest">
-              <th className="text-left pb-2 pl-6">#</th>
-              <th className="text-left pb-2">Test Nomi</th>
-              <th className="text-left pb-2">Status</th>
-              <th className="text-left pb-2">Yaratilgan vaqti</th>
-              <th className="text-center pb-2 pr-6">Amallar</th>
-            </tr>
-          </thead>
-          <tbody ref={menuRef}>
-            {tests.map((test, index) => (
-              <tr
-                key={test.id}
-                className="bg-white hover:shadow-lg transition-all group"
+      {/* JADVAL CHIQADIGAN JOY */}
+      <div className="mt-4">
+        <Outlet />
+      </div>
+
+      {/* 2. ISHLAYDIGAN PAGINATION QISMI */}
+      <div className="flex justify-between items-center mt-10 px-4">
+        <p className="text-[14px] text-[#A3AED0] font-bold">Jami 5 ta test</p>
+
+        <div className="flex items-center gap-4">
+          {/* Oldingi tugmasi */}
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className={`font-bold text-sm transition-all ${currentPage === 1 ? "text-gray-300 cursor-not-allowed" : "text-[#A3AED0] hover:text-[#4318FF]"}`}
+          >
+            Oldingi
+          </button>
+
+          <div className="flex gap-2">
+            {[1, 2, 3].map((n) => (
+              <button
+                key={n}
+                onClick={() => setCurrentPage(n)}
+                className={`w-10 h-10 flex items-center justify-center rounded-full font-bold text-sm transition-all ${
+                  n === currentPage
+                    ? "bg-[#4318FF] text-white shadow-lg shadow-indigo-200 transform scale-110"
+                    : "text-[#4318FF] hover:bg-white hover:shadow-sm"
+                }`}
               >
-                <td className="py-5 pl-6 rounded-l-[24px] font-bold">
-                  {index + 1}
-                </td>
-                <td className="py-5">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-[#4318FF] rounded-2xl text-white shadow-inner">
-                      <FiBookOpen size={20} />
-                    </div>
-                    <span className="font-bold text-[15px]">{test.name}</span>
-                  </div>
-                </td>
-                <td className="py-5">
-                  <span className="px-4 py-1.5 bg-green-50 text-[#05CD99] rounded-xl text-[12px] font-bold border border-green-100">
-                    ● {test.status}
-                  </span>
-                </td>
-                <td className="py-5 font-bold tracking-tight">{test.date}</td>
-                <td className="py-5 pr-6 rounded-r-[24px] text-center relative">
-                  <button
-                    onClick={() =>
-                      setOpenMenuId(openMenuId === test.id ? null : test.id)
-                    }
-                    className="p-2 text-[#A3AED0] hover:bg-gray-100 rounded-full transition-all focus:outline-none"
-                  >
-                    <FiMoreVertical size={22} />
-                  </button>
-                  {openMenuId === test.id && (
-                    <div className="absolute right-10 top-12 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in duration-200">
-                      <button
-                        onClick={() => handleCreateExam(test.id)}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold hover:bg-purple-50 hover:text-[#4318FF] transition-colors text-left"
-                      >
-                        <FiPlus className="text-[#4318FF] text-lg" /> Imtihon
-                        yaratish
-                      </button>
-                      <div className="h-[1px] bg-gray-100 my-1 mx-2"></div>
-                      <button
-                        onClick={() => openDeleteModal(test.id)}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 font-bold transition-colors text-left"
-                      >
-                        <FiTrash2 className="text-lg" /> O'chirish
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
+                {n}
+              </button>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
 
-      {/* --- MODAL (CONFIRM DIALOG) --- */}
-      <Dialog
-        open={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        PaperProps={{
-          style: {
-            borderRadius: 24,
-            padding: 10,
-            width: "100%",
-            maxWidth: 400,
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            fontWeight: 800,
-            color: "#1B2559",
-            textAlign: "center",
-            fontSize: "1.5rem",
-          }}
-        >
-          O'chirishni tasdiqlang
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText
-            sx={{ fontWeight: 600, textAlign: "center", color: "#707EAE" }}
+          {/* Keyingi tugmasi */}
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className={`font-bold text-sm transition-all ${currentPage === totalPages ? "text-gray-300 cursor-not-allowed" : "text-[#4318FF] hover:text-[#3311CC]"}`}
           >
-            Haqiqatdan ham ushbu testni o'chirib tashlamoqchimisiz? Bu amalni
-            ortga qaytarib bo'lmaydi.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: "center", gap: 2, pb: 3 }}>
-          <Button
-            onClick={() => setDeleteModalOpen(false)}
-            sx={{
-              color: "#A3AED0",
-              fontWeight: 700,
-              textTransform: "none",
-              fontSize: "1rem",
-            }}
-          >
-            Bekor qilish
-          </Button>
-          <Button
-            onClick={confirmDelete}
-            variant="contained"
-            color="error"
-            sx={{
-              borderRadius: 4,
-              fontWeight: 700,
-              textTransform: "none",
-              px: 4,
-              py: 1,
-              boxShadow: "0px 10px 20px rgba(238, 93, 107, 0.2)",
-            }}
-          >
-            Ha, o'chirilsin
-          </Button>
-        </DialogActions>
-      </Dialog>
+            Keyingi
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
