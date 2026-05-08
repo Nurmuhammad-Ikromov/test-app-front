@@ -1,19 +1,9 @@
+/** @format */
+
 import { useEffect, useState, useCallback } from "react";
 import {
-  Paper,
-  Typography,
-  List,
-  ListItem,
-  ListItemText,
   CircularProgress,
   Alert,
-  TablePagination,
-  IconButton,
-  Select,
-  MenuItem,
-  Box,
-  FormControl,
-  InputLabel,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -22,7 +12,10 @@ import {
   Button,
 } from "@mui/material";
 import { BiEdit, BiTrash } from "react-icons/bi";
-import { ToastContainer, toast } from 'react-toastify';
+import { FiMail, FiPhone } from "react-icons/fi";
+import { HiOutlineArrowTrendingUp } from "react-icons/hi2";
+import { BsCheckCircle, BsAward } from "react-icons/bs";
+import { toast } from "react-toastify";
 import StudentEditModal from "./StudentEditModal";
 import API from "../../../utils/config";
 
@@ -35,7 +28,7 @@ const StudentList = () => {
   const [deleteStudent, setDeleteStudent] = useState(null);
 
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage] = useState(8);
   const [total, setTotal] = useState(0);
 
   const [loading, setLoading] = useState(false);
@@ -80,22 +73,9 @@ const StudentList = () => {
   useEffect(() => {
     fetchStudents();
   }, [fetchStudents]);
-
   useEffect(() => {
     fetchClasses();
   }, [fetchClasses]);
-
-  const handleChangePage = (_, newPage) => setPage(newPage);
-
-  const handleChangeRowsPerPage = (e) => {
-    setRowsPerPage(parseInt(e.target.value, 10));
-    setPage(0);
-  };
-
-  const handleEditClick = (student) => {
-    setSelectedStudent(student);
-    setEditOpen(true);
-  };
 
   const handleEditSave = async (updatedStudent) => {
     try {
@@ -110,22 +90,11 @@ const StudentList = () => {
     }
   };
 
-  const handleDeleteClick = (student) => {
-    setDeleteStudent(student);
-  };
-
-
-
   const handleDeleteConfirm = async () => {
     try {
-      if (!selectedClass) {
-        toast.warning("Sinf tanlanmagan!");
-        return;
-      }
-      await API.post(
-        `/students/remove-student`,
-        { studentId: deleteStudent._id }
-      );
+      await API.post(`/students/remove-student`, {
+        studentId: deleteStudent._id,
+      });
       toast.success("Talaba o‘chirildi");
       setDeleteStudent(null);
       fetchStudents();
@@ -134,111 +103,205 @@ const StudentList = () => {
     }
   };
 
-  const handleDeleteCancel = () => {
-    setDeleteStudent(null);
-  };
-
   return (
-    <>
-      <Paper elevation={3} sx={{ p: 3, mt: 2 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h5">Talabalar ro‘yxati</Typography>
+    /* MUHIM: min-h-screen va pb-40 sahifani bemalol scroll bo'lishiga yo'l ochadi */
+    <div className="w-full min-h-screen pb-40 overflow-y-visible flex flex-col">
+      {/* 1. FILTER HEADER */}
+      <div className="bg-white p-6 rounded-[24px] shadow-sm mb-10 flex justify-between items-center border border-gray-50 shrink-0">
+        <h2 className="text-xl font-extrabold text-[#1B2559]">
+          Talabalar ro‘yxati
+        </h2>
+        <select
+          value={selectedClass}
+          onChange={(e) => {
+            setSelectedClass(e.target.value);
+            setPage(0);
+          }}
+          className="bg-[#F4F7FE] border-none text-[#707EAE] px-5 py-2.5 rounded-2xl text-sm font-bold outline-none cursor-pointer"
+        >
+          <option value="">Sinfni tanlang</option>
+          {classes.map((cls) => (
+            <option key={cls._id} value={cls._id}>
+              {cls.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        <FormControl sx={{ minWidth: 240 }}>
-  <Select
-    value={selectedClass}
-    onChange={(e) => {
-      setSelectedClass(e.target.value);
-      setPage(0);
-    }}
-    displayEmpty
-  >
-    <MenuItem value="" disabled>
-      Sinfni tanlang
-    </MenuItem>
-    {classes.map((cls) => (
-      <MenuItem key={cls._id} value={cls._id}>
-        {cls.name}
-      </MenuItem>
-    ))}
-  </Select>
-</FormControl>
-
-        </Box>
-
-        {loading ? (
-          <Box mt={4} display="flex" justifyContent="center">
-            <CircularProgress />
-          </Box>
-        ) : error ? (
-          <Alert severity="error" sx={{ mt: 3 }}>
-            {error}
-          </Alert>
-        ) : (
-          <Box mt={2} position="relative">
-            <List sx={{ maxHeight: "50vh", overflow: "auto" }}>
-              {students.map((student, index) => (
-                <ListItem key={student._id} divider>
-                  <ListItemText
-                    primaryTypographyProps={{ fontWeight: "bold" }}
-                    primary={`${page * rowsPerPage + index + 1}. ${student.first_name} ${student.last_name}`}
-                    secondary={student?.class?.name}
-                  />
-                  <IconButton
-                    edge="end"
-                    color="primary"
-                    onClick={() => handleEditClick(student)}
+      {/* 2. MAIN CONTENT AREA */}
+      {loading ? (
+        <div className="flex justify-center items-center py-40">
+          <CircularProgress />
+        </div>
+      ) : error ? (
+        <Alert severity="error" className="rounded-2xl">
+          {error}
+        </Alert>
+      ) : (
+        <div className="flex-1">
+          {/* CARDS GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {students.map((student) => (
+              <div
+                key={student._id}
+                className="bg-white p-7 rounded-[40px] shadow-sm hover:shadow-2xl transition-all duration-500 group relative border border-transparent hover:border-indigo-100 flex flex-col items-center text-center"
+              >
+                {/* ACTION BUTTONS */}
+                <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                  <button
+                    onClick={() => {
+                      setSelectedStudent(student);
+                      setEditOpen(true);
+                    }}
+                    className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all"
                   >
-                    <BiEdit />
-                  </IconButton>
-                  <IconButton
-                    edge="end"
-                    color="error"
-                    onClick={() => handleDeleteClick(student)}
+                    <BiEdit size={20} />
+                  </button>
+                  <button
+                    onClick={() => setDeleteStudent(student)}
+                    className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all"
                   >
-                    <BiTrash />
-                  </IconButton>
-                </ListItem>
-              ))}
-            </List>
+                    <BiTrash size={20} />
+                  </button>
+                </div>
 
-            <TablePagination
-              component="div"
-              count={total}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-            />
-          </Box>
-        )}
-      </Paper>
+                <div className="w-20 h-20 bg-[#4318FF] text-white rounded-full flex items-center justify-center text-2xl font-bold mb-5 shadow-2xl shadow-indigo-100 group-hover:scale-110 transition-transform">
+                  {student.first_name?.charAt(0)}
+                  {student.last_name?.charAt(0)}
+                </div>
 
+                <h3 className="text-xl font-bold text-[#1B2559] mb-1">
+                  {student.first_name} {student.last_name}
+                </h3>
+                <p className="text-[11px] font-bold text-[#A3AED0] mb-6 uppercase tracking-[0.2em]">
+                  {student?.class?.name || "Guruhsiz"}
+                </p>
+
+                <div className="w-full space-y-3 mb-10">
+                  <div className="flex items-center justify-center gap-3 text-[14px] text-[#707EAE] font-medium">
+                    <FiMail className="text-indigo-400 shrink-0" />
+                    <span className="truncate">
+                      {student.email || "example@pdp.uz"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center gap-3 text-[14px] text-[#707EAE] font-medium">
+                    <FiPhone className="text-indigo-400 shrink-0" />
+                    <span>{student.phone || "+998 90 000 00 00"}</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-between w-full pt-6 border-t border-gray-50 mt-auto">
+                  <div className="flex flex-col items-center">
+                    <div className="p-3 bg-blue-50 rounded-full mb-2 text-blue-500">
+                      <HiOutlineArrowTrendingUp size={18} />
+                    </div>
+                    <span className="text-[14px] font-extrabold text-[#1B2559]">
+                      {student.average_score || 0}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="p-3 bg-green-50 rounded-full mb-2 text-green-500">
+                      <BsCheckCircle size={18} />
+                    </div>
+                    <span className="text-[14px] font-extrabold text-[#1B2559]">
+                      {student.attendance || 0}%
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="p-3 bg-purple-50 rounded-full mb-2 text-purple-500">
+                      <BsAward size={18} />
+                    </div>
+                    <span className="text-[14px] font-extrabold text-[#1B2559]">
+                      {student.achievements || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 3. PAGINATION (Kartalardan keyin bemalol joylashadi) */}
+          <div className="flex justify-center items-center mt-20">
+            <div className="flex items-center gap-8 bg-white px-10 py-4 rounded-full shadow-xl border border-gray-50">
+              <button
+                disabled={page === 0}
+                onClick={() => {
+                  setPage((p) => p - 1);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="text-[12px] font-black text-[#A3AED0] hover:text-[#4318FF] disabled:opacity-20 transition-all uppercase tracking-widest"
+              >
+                Oldingi
+              </button>
+
+              <div className="flex items-center gap-4">
+                <span className="bg-[#4318FF] text-white w-12 h-12 flex items-center justify-center rounded-full font-black shadow-lg shadow-indigo-200 transform scale-110">
+                  {page + 1}
+                </span>
+                <span className="text-[#A3AED0] font-bold text-sm">
+                  / {Math.ceil(total / rowsPerPage) || 1}
+                </span>
+              </div>
+
+              <button
+                disabled={(page + 1) * rowsPerPage >= total}
+                onClick={() => {
+                  setPage((p) => p + 1);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="text-[12px] font-black text-[#A3AED0] hover:text-[#4318FF] disabled:opacity-20 transition-all uppercase tracking-widest"
+              >
+                Keyingi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODALLAR */}
       <StudentEditModal
         open={editOpen}
         onClose={() => setEditOpen(false)}
         student={selectedStudent}
         onSave={handleEditSave}
-        showUsername={true} // modal ichida username ko‘rsatish uchun prop
+        showUsername={true}
       />
 
-      <Dialog open={!!deleteStudent} onClose={handleDeleteCancel}>
-        <DialogTitle>Talabani o‘chirish</DialogTitle>
+      <Dialog
+        open={!!deleteStudent}
+        onClose={() => setDeleteStudent(null)}
+        PaperProps={{ style: { borderRadius: 30, padding: 10 } }}
+      >
+        <DialogTitle className="font-black text-[#1B2559] text-xl">
+          O'chirishni tasdiqlaysizmi?
+        </DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Haqiqatan ham {deleteStudent?.first_name} {deleteStudent?.last_name}ni
-            o‘chirmoqchimisiz?
+          <DialogContentText className="text-[#707EAE] font-medium">
+            Haqiqatdan ham{" "}
+            <b>
+              {deleteStudent?.first_name} {deleteStudent?.last_name}
+            </b>
+            ni o'chirib tashlamoqchimisiz?
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel}>Yo‘q</Button>
-          <Button color="error" onClick={handleDeleteConfirm}>
-            Ha
+        <DialogActions className="p-6">
+          <Button
+            onClick={() => setDeleteStudent(null)}
+            className="text-[#A3AED0] font-bold px-6"
+          >
+            Bekor qilish
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            variant="contained"
+            color="error"
+            className="rounded-2xl font-bold px-8 py-2.5 shadow-lg shadow-red-100"
+          >
+            O'chirilsin
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </div>
   );
 };
 
