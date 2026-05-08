@@ -8,7 +8,7 @@ function App() {
   return (
     <HelmetProvider>
       <>
-        {/* SEO uchun asosiy meta teglar */}
+        {/* SEO uchun asosiy meta teglar (Otabek yozdi) */}
         <Helmet>
           <title>
             PDP Education | Onlayn imtihon tizimi va baholash platformasi
