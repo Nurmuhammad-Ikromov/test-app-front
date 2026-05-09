@@ -138,7 +138,7 @@ const Classes = () => {
     if (selectedClass) fetchGrades(selectedClass);
   }, [selectedClass]);
 
-  // Add new date
+  // Add new date (WE REMOVED /attendance/generate)
   const addDate = (formatted) => {
     if (!dates.includes(formatted)) {
       const updated = [...dates, formatted].sort();
@@ -244,69 +244,23 @@ const Classes = () => {
     setShowKeepModal(false);
   };
 
-  // Get first letter of teacher name for avatar
-  const getTeacherInitial = (teacher) => {
-    if (!teacher) return "?";
-    const firstName = teacher.first_name || "";
-    const lastName = teacher.last_name || "";
-    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
-  };
-
-  // Prepare class data with additional info
-  const classCardsData = classes.map((cls) => {
-    const classSubjects = subjects.filter((s) => s.class?._id === cls._id);
-    const mainSubject = classSubjects[0]?.subject?.name || "Fan";
-    const studentCount = cls.students?.length || 0;
-    const teacher = cls.teacher;
-
-    const schedules = {
-      "10-A": "Dush, Chor, Jum - 09:00",
-      "11-B": "Sesh, Pay, Shan - 14:00",
-      "9-A": "Dush, Chor - 10:30",
-      "10-B": "Sesh, Jum - 13:00",
-      "9-B": "Pay, Chor, Shan - 11:00",
-      "11-A": "Dush, Sesh, Jum - 15:00",
-    };
-
-    const avgScores = {
-      "10-A": 87,
-      "11-B": 82,
-      "9-A": 85,
-      "10-B": 90,
-      "9-B": 86,
-      "11-A": 88,
-    };
-
-    return {
-      ...cls,
-      subjectName: mainSubject,
-      studentCount: studentCount,
-      teacherName: teacher
-        ? `${teacher.first_name || ""} ${teacher.last_name || ""}`
-        : "O'qituvchi",
-      teacherInitial: getTeacherInitial(teacher),
-      schedule: schedules[cls.name] || "Dush - Jum 09:00",
-      avgScore: avgScores[cls.name] || 85,
-    };
-  });
-
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* CLASS SELECT BUTTONS */}
-      <div className="flex items-center gap-4 mb-6">
-        <label className="font-semibold text-gray-700">Sinf:</label>
+    <div className="p-6 bg-white">
+      {/* CLASS SELECT */}
+      <div className="flex items-center gap-4 mb-4">
+        <label className="font-semibold">Sinf:</label>
         {loadingInitial ? (
-          <span className="text-gray-500">Yuklanmoqda...</span>
+          "Yuklanmoqda..."
         ) : (
           <div className="flex flex-wrap gap-2">
             {classes.map((cls) => (
               <button
                 key={cls._id}
                 onClick={() => setSelectedClass(cls._id)}
-                className={`px-4 py-2 rounded-lg transition ${
+                className={`px-4 py-2 rounded border ${
                   selectedClass === cls._id
-                    ? "bg-green-500 text-white shadow-md"
-                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                    ? "bg-green-500 text-white"
+                    : "bg-white text-black"
                 }`}
               >
                 {cls.name}
@@ -316,141 +270,43 @@ const Classes = () => {
         )}
       </div>
 
-      {/* CLASS CARDS SECTION - NEW DESIGN */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">Sinflar</h2>
-            <p className="text-gray-500 text-sm mt-1">
-              Barcha sinflar va ularning ma'lumotlari
-            </p>
-          </div>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Qidirish..."
-              className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm w-64 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-            <svg
-              className="absolute left-3 top-2.5 w-4 h-4 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {classCardsData.map((cls) => (
-            <div
-              key={cls._id}
-              onClick={() => setSelectedClass(cls._id)}
-              className={`bg-white rounded-2xl border transition-all cursor-pointer hover:shadow-lg ${
-                selectedClass === cls._id
-                  ? "border-green-500 ring-2 ring-green-200 shadow-md"
-                  : "border-gray-200 hover:border-gray-300"
-              }`}
-            >
-              <div className="p-5 border-b border-gray-100">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-800">
-                      {cls.name}
-                    </h3>
-                    <p className="text-gray-500 text-sm mt-1">
-                      {cls.subjectName}
-                    </p>
-                  </div>
-                  <div className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">
-                    {cls.studentCount} ta
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-5 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                    {cls.teacherInitial}
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Sinf rahbari</p>
-                    <p className="font-semibold text-gray-800">
-                      {cls.teacherName}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">{cls.schedule}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-5 grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-400">O'rtacha ball</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {cls.avgScore}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400">O'quvchilar</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {cls.studentCount}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* TOP TOOLBAR */}
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-wrap justify-between items-center gap-4">
-        <div className="flex items-center gap-3">
-          <label className="font-semibold text-gray-700">Sana qo'shish:</label>
+      <div className="flex justify-between mb-4 items-center">
+        <div>
+          <label className="font-semibold">Sana qo'shish:</label>
           <input
             type="date"
             onChange={(e) => {
               const val = e.target.value;
               if (/^\d{4}-\d{2}-\d{2}$/.test(val)) addDate(val);
             }}
-            className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="border p-2 rounded"
           />
         </div>
 
         <div className="flex items-center gap-4">
-          <label className="font-semibold text-gray-700">UI:</label>
-          <div className="flex rounded-lg overflow-hidden border border-gray-300">
+          <label className="font-semibold">UI:</label>
+          <div className="flex rounded overflow-hidden border">
             <button
               onClick={() => setUiMode("select")}
-              className={`px-4 py-2 transition ${
-                uiMode === "select"
-                  ? "bg-green-500 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+              className={`px-4 py-2 ${
+                uiMode === "select" ? "bg-blue-600 text-white" : "bg-white"
               }`}
             >
               Select
             </button>
             <button
               onClick={() => setUiMode("input")}
-              className={`px-4 py-2 transition ${
-                uiMode === "input"
-                  ? "bg-green-500 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+              className={`px-4 py-2 ${
+                uiMode === "input" ? "bg-blue-600 text-white" : "bg-white"
               }`}
             >
               Input
             </button>
             <button
               onClick={() => setUiMode("davomat")}
-              className={`px-4 py-2 transition ${
-                uiMode === "davomat"
-                  ? "bg-green-500 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+              className={`px-4 py-2 ${
+                uiMode === "davomat" ? "bg-blue-600 text-white" : "bg-white"
               }`}
             >
               Davomat
@@ -462,10 +318,10 @@ const Classes = () => {
           <button
             onClick={handleSave}
             disabled={!unsavedChanges || loadingTable}
-            className={`px-4 py-2 rounded-lg shadow transition ${
+            className={`px-4 py-2 rounded shadow ${
               unsavedChanges && !loadingTable
-                ? "bg-green-500 text-white hover:bg-green-600"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-400 text-gray-200"
             }`}
           >
             Saqlash
@@ -473,15 +329,15 @@ const Classes = () => {
 
           <button
             onClick={openKeepModal}
-            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition"
+            className="px-4 py-2 bg-purple-600 text-white rounded"
           >
             Screenshot 📸
           </button>
 
           <button
             onClick={() => fetchGrades(selectedClass)}
-            className={`px-4 py-2 text-white rounded-lg transition ${
-              loadingTable ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+            className={`px-4 py-2 text-white rounded ${
+              loadingTable ? "bg-gray-500" : "bg-blue-500"
             }`}
           >
             <FaRedo />
@@ -492,125 +348,143 @@ const Classes = () => {
       {/* TABLE */}
       <div
         id="grades-table"
-        className="overflow-auto max-h-[500px] border border-gray-200 rounded-xl bg-white"
+        className="overflow-auto max-h-[500px] border border-gray-300 rounded max-w-[1250px]"
       >
         {loadingTable ? (
           <div className="flex items-center justify-center h-[500px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-500 mx-auto mb-3"></div>
-              <span className="text-gray-500">Yuklanmoqda...</span>
-            </div>
+            <span className="text-gray-500 text-lg">Yuklanmoqda...</span>
           </div>
         ) : (
-          <table className="w-full border-collapse">
-            <thead className="bg-gray-50 sticky top-0 z-20">
+          <table className="w-full border-collapse table-auto relative">
+            <thead className="bg-gray-200 sticky top-0 z-20">
               <tr>
-                <th className="border-b border-gray-200 p-3 text-left sticky left-0 bg-gray-50 w-[60px]">
-                  T/R
-                </th>
-                <th className="border-b border-gray-200 p-3 text-left sticky left-[60px] bg-gray-50 min-w-[180px]">
+                <th className="border p-2 sticky left-0 bg-gray-200">T/R</th>
+                <th className="border p-2 sticky left-[44px] bg-gray-200">
                   O‘quvchi
                 </th>
                 {dates.map((d) => (
-                  <th
-                    key={d}
-                    className="border-b border-gray-200 p-3 text-center min-w-[120px]"
-                  >
+                  <th key={d} className="border p-2 sticky top-0 bg-gray-200">
                     {new Date(d).toLocaleDateString("en-GB")}
                   </th>
                 ))}
-                <th className="border-b border-gray-200 p-3 text-center sticky right-0 bg-gray-50 min-w-[100px]">
+                <th className="border p-2 sticky right-0 bg-gray-200 min-w-[120px]">
                   O‘rtacha
                 </th>
               </tr>
             </thead>
+
             <tbody>
               {classes
                 .find((el) => el._id === selectedClass)
                 ?.students.map((student, index) => (
-                  <tr
-                    key={student?._id}
-                    className="hover:bg-gray-50 transition"
-                  >
-                    <td className="border-b border-gray-100 p-3 sticky left-0 bg-white text-center text-gray-500">
+                  <tr key={student?._id}>
+                    <td className="border p-2 sticky left-0 bg-gray-100 text-center">
                       {index + 1}
                     </td>
-                    <td className="border-b border-gray-100 p-3 sticky left-[60px] bg-white font-medium">
+
+                    <td className="border p-2 sticky left-[50px] bg-gray-100">
                       {student?.first_name} {student?.last_name}
                     </td>
+
                     {dates.map((d) => {
                       const grade = gradesByDate[d]?.[student._id]?.toString();
-                      let gradeColor = "";
+                      let bgColor = "bg-white";
 
-                      if (uiMode !== "davomat" && grade && grade !== "") {
-                        const colors = {
-                          5: "bg-green-100 text-green-700",
-                          4: "bg-orange-100 text-orange-700",
-                          3: "bg-yellow-100 text-yellow-700",
-                          2: "bg-red-100 text-red-700",
-                          1: "bg-red-200 text-red-800",
-                          0: "bg-red-300 text-red-900",
-                        };
-                        gradeColor = colors[grade] || "";
+                      // grade coloring
+                      if (grade !== undefined && grade !== "") {
+                        bgColor =
+                          {
+                            5: "bg-green-500",
+                            4: "bg-orange-400",
+                            3: "bg-yellow-300",
+                            2: "bg-red-300",
+                            1: "bg-red-400",
+                            0: "bg-red-500",
+                          }[grade] || "bg-white";
                       }
 
                       return (
-                        <td key={d} className="border-b border-gray-100 p-2">
+                        <td key={d} className="border p-2">
                           {uiMode === "davomat" ? (
-                            <div className="flex gap-1 justify-center">
-                              <button
-                                onClick={() =>
-                                  handleAttendanceChange(
-                                    student._id,
-                                    d,
-                                    "present",
-                                  )
-                                }
-                                className={`px-2 py-1 text-xs rounded transition ${
-                                  (pendingAttendance[d]?.[student._id] ??
-                                    attendanceByDate[d]?.[student._id]) ===
-                                  "present"
-                                    ? "bg-green-500 text-white"
-                                    : "bg-gray-100 text-gray-500 hover:bg-green-200"
-                                }`}
-                              >
-                                Bor
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleAttendanceChange(student._id, d, "late")
-                                }
-                                className={`px-2 py-1 text-xs rounded transition ${
-                                  (pendingAttendance[d]?.[student._id] ??
-                                    attendanceByDate[d]?.[student._id]) ===
-                                  "late"
-                                    ? "bg-yellow-500 text-white"
-                                    : "bg-gray-100 text-gray-500 hover:bg-yellow-200"
-                                }`}
-                              >
-                                Kech
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleAttendanceChange(
-                                    student._id,
-                                    d,
-                                    "absent",
-                                  )
-                                }
-                                className={`px-2 py-1 text-xs rounded transition ${
-                                  (pendingAttendance[d]?.[student._id] ??
-                                    attendanceByDate[d]?.[student._id]) ===
-                                  "absent"
-                                    ? "bg-red-500 text-white"
-                                    : "bg-gray-100 text-gray-500 hover:bg-red-200"
-                                }`}
-                              >
-                                Yo‘q
-                              </button>
+                            // 🔥 Davomat uchun maxsus oq fon — baho ranglari ta’sir qilmaydi
+                            <div className="bg-white">
+                              {(() => {
+                                const attendanceStatus =
+                                  pendingAttendance[d]?.[student._id] ??
+                                  attendanceByDate[d]?.[student._id] ??
+                                  (gradesByDate[d]?.[student._id] != null
+                                    ? "present"
+                                    : "absent");
+
+                                const makeButton = (status, color) => {
+                                  const isActive = attendanceStatus === status;
+                                  return `
+            ${color}
+            text-white 
+            px-2 py-1 
+            rounded 
+            transition 
+            duration-150
+            ${isActive ? "opacity-100 ring-2 ring-black/20" : "opacity-40"}
+          `;
+                                };
+
+                                return (
+                                  <div className="flex gap-2 justify-center">
+                                    <button
+                                      onClick={() =>
+                                        handleAttendanceChange(
+                                          student._id,
+                                          d,
+                                          "present",
+                                        )
+                                      }
+                                      className={makeButton(
+                                        "present",
+                                        "bg-green-500",
+                                      )}
+                                    >
+                                      Bor
+                                    </button>
+
+                                    <button
+                                      onClick={() =>
+                                        handleAttendanceChange(
+                                          student._id,
+                                          d,
+                                          "late",
+                                        )
+                                      }
+                                      className={makeButton(
+                                        "late",
+                                        "bg-yellow-400",
+                                      )}
+                                    >
+                                      Kech
+                                    </button>
+
+                                    <button
+                                      onClick={() =>
+                                        handleAttendanceChange(
+                                          student._id,
+                                          d,
+                                          "absent",
+                                        )
+                                      }
+                                      className={makeButton(
+                                        "absent",
+                                        "bg-red-500",
+                                      )}
+                                    >
+                                      Yo‘q
+                                    </button>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           ) : (
-                            <div className={gradeColor}>
+                            // 🔥 Select/Input uchun — baho ranglari ishlaydi
+                            <div className={bgColor}>
                               {uiMode === "select" ? (
                                 <select
                                   value={grade ?? ""}
@@ -621,7 +495,7 @@ const Classes = () => {
                                       e.target.value,
                                     )
                                   }
-                                  className="border border-gray-200 rounded-lg p-1.5 w-full text-center bg-white focus:ring-2 focus:ring-green-500 outline-none"
+                                  className="border rounded p-1 w-full bg-transparent"
                                 >
                                   <option value="">-</option>
                                   <option value="5">5</option>
@@ -644,7 +518,7 @@ const Classes = () => {
                                       e.target.value,
                                     )
                                   }
-                                  className="border border-gray-200 rounded-lg p-1.5 w-full text-center bg-white focus:ring-2 focus:ring-green-500 outline-none"
+                                  className="border rounded p-1 w-full text-center bg-transparent"
                                 />
                               )}
                             </div>
@@ -652,10 +526,9 @@ const Classes = () => {
                         </td>
                       );
                     })}
-                    <td className="border-b border-gray-100 p-3 text-center font-semibold sticky right-0 bg-white">
-                      <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm">
-                        {calculateAveragePercent(student._id)}
-                      </span>
+
+                    <td className="border p-2 text-center font-semibold bg-gray-100 sticky right-0">
+                      {calculateAveragePercent(student._id)}
                     </td>
                   </tr>
                 ))}
@@ -671,12 +544,16 @@ const Classes = () => {
             className="absolute inset-0 bg-black opacity-40"
             onClick={() => setShowKeepModal(false)}
           />
-          <div className="relative bg-white rounded-2xl p-6 w-[400px] shadow-xl">
-            <h3 className="text-xl font-bold mb-2">Screenshot sozlamalari</h3>
-            <p className="text-gray-500 mb-4">
-              Nechta <strong>oxirgi</strong> sanani olish?
+
+          <div className="relative bg-white rounded-lg p-6 w-[360px] shadow-lg z-60">
+            <h3 className="text-lg font-semibold mb-2">
+              Screenshot sozlamalari
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Nechta <strong>oxirgi</strong> sanani olish? (0 — hech biri)
             </p>
-            <div className="flex items-center gap-3 mb-4">
+
+            <div className="flex items-center gap-2 mb-3">
               <input
                 type="number"
                 min={0}
@@ -687,23 +564,25 @@ const Classes = () => {
                     e.target.value === "" ? "" : Number(e.target.value),
                   )
                 }
-                className="border border-gray-200 rounded-xl p-3 w-full focus:ring-2 focus:ring-green-500 outline-none"
+                className="border p-2 rounded w-full"
               />
-              <span className="text-gray-500">/ {dates.length}</span>
+              <div className="text-sm text-gray-500">/ {dates.length}</div>
             </div>
+
             {keepError && (
-              <p className="text-red-500 text-sm mb-3">{keepError}</p>
+              <div className="text-sm text-red-500 mb-2">{keepError}</div>
             )}
-            <div className="flex justify-end gap-3">
+
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowKeepModal(false)}
-                className="px-5 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 transition"
+                className="px-4 py-2 rounded border"
               >
                 Bekor qilish
               </button>
               <button
                 onClick={confirmKeepAndScreenshot}
-                className="px-5 py-2 rounded-xl bg-green-500 text-white hover:bg-green-600 transition"
+                className="px-4 py-2 rounded bg-blue-600 text-white"
               >
                 Saqlab olish
               </button>
