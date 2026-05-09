@@ -1,27 +1,51 @@
+/** @format */
+
 import React from "react";
 import Navbar from "../../../components/Navbar/Navbar";
-import { Link, Outlet, useParams } from "react-router-dom";
+import { Outlet } from "react-router-dom";
+import { FiSearch } from "react-icons/fi"; // Qidiruv belgisi uchun
 
 const AttemptPage = () => {
-    return <div className="p-8">
-        {/* Header */}
+  return (
+    <div className="p-8 bg-[#F8F9FB] min-h-screen w-full font-sans text-[#1B2559]">
+      
+      {/* 1. HEADER / NAVBAR */}
+      {/* Navbar komponenti ichida sarlavha va profil chiroyli chiqadi */}
+      <div className="mb-8">
+        <Navbar title="Imtihonlar" name="Sinovlar ro'yxati" />
+      </div>
 
-        <Navbar title="Sinovlar ro’yxati" />
-        {/* Search Bar */}
-        <div className="flex justify-between mb-4">
-            {/* <Link to={"/exams/create"} className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-                + Yangi Imtihon
-            </Link> */}
-            <input
-                type="text"
-                placeholder="Search..."
-                className="border border-gray-300 rounded-lg p-2 w-1/4"
-            />
+      {/* 2. SEARCH SECTION */}
+      <div className="bg-white p-4 rounded-[24px] shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 border border-gray-50 mb-8 transition-all hover:shadow-md">
+        
+        {/* Qidiruv paneli - Modern dizayn */}
+        <div className="relative flex-1 w-full max-w-md">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-[#A3AED0]">
+            <FiSearch size={20} />
+          </span>
+          <input
+            type="text"
+            placeholder="Imtihon nomini yozing..."
+            className="w-full pl-12 pr-4 py-3 bg-[#F4F7FE] border-none rounded-2xl focus:ring-2 focus:ring-[#4318FF] outline-none font-medium text-sm transition-all"
+          />
         </div>
 
-        <Outlet />
+        {/* Agar kerak bo'lsa bu yerga qo'shimcha filtr tugmalari qo'shish mumkin */}
+        <div className="hidden md:block">
+           <p className="text-[11px] text-[#A3AED0] font-black uppercase tracking-widest px-4">
+             Jami natijalar boshqaruvi
+           </p>
+        </div>
+      </div>
 
-    </div>;;
+      {/* 3. CONTENT AREA */}
+      {/* Outlet ichida jadval yoki kartalar chiqadi */}
+      <div className="w-full overflow-visible">
+        <Outlet />
+      </div>
+
+    </div>
+  );
 };
 
 export default AttemptPage;
