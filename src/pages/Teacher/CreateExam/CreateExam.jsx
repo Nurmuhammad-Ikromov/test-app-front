@@ -9,6 +9,8 @@ import {
     Typography,
     FormControl,
     InputLabel,
+    FormControlLabel,
+    Switch,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -24,7 +26,8 @@ const CreateExam = () => {
         title: "",
         classId: "",
         startDate: null,
-        endDate: null
+        endDate: null,
+        showResultToStudent: true, // default: natija studentga ko'rinadi
     });
 
     const token = localStorage.getItem("token");
@@ -57,11 +60,12 @@ const CreateExam = () => {
                 classId: formData.classId,
                 startTime: formData.startDate ? dayjs(formData.startDate).valueOf() : null,
                 endTime: formData.endDate ? dayjs(formData.endDate).valueOf() : null,
+                showResultToStudent: formData.showResultToStudent,
             }
         )
             .then((res) => {
                 alert("Exam successfully created!");
-                setFormData({ title: "", classId: "", startDate: null, endDate: null });
+                setFormData({ title: "", classId: "", startDate: null, endDate: null, showResultToStudent: true });
             })
             .catch((err) => {
                 console.error(err);
@@ -136,6 +140,27 @@ const CreateExam = () => {
                         onChange={handleDateChange("endDate")}
                     />
                 </FormControl>
+
+                <FormControlLabel
+                    control={
+                        <Switch
+                            name="showResultToStudent"
+                            checked={formData.showResultToStudent}
+                            onChange={(e) =>
+                                setFormData((prevState) => ({
+                                    ...prevState,
+                                    showResultToStudent: e.target.checked,
+                                }))
+                            }
+                        />
+                    }
+                    label="Natija studentga ko'rinsin"
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+                    {formData.showResultToStudent
+                        ? "Student o'z natijasini ko'ra oladi."
+                        : "Student o'z natijasini ko'ra olmaydi."}
+                </Typography>
 
                 <Button type="submit" variant="contained" color="primary" fullWidth>
                     Create Exam

@@ -43,14 +43,22 @@ const History = () => {
       },
     })
       .then((res) => {
-        const formattedGrades = res.data.user.grades.map((item, index) => ({
-          _id: index + 1,
-          examTitle: item.exam.title,
-          date: new Date(item.createdAt).toLocaleDateString("en-GB"),
-          status: item.status,
-          score: Object.values(JSON.parse(item.exam_response)).filter(q => q.check).length,
-          total: Object.keys(JSON.parse(item.exam_response)).length,
-        }));
+        const formattedGrades = res.data.user.grades.map((item, index) => {
+          // Natija o'qituvchi tomonidan yopilgan bo'lsa, ball ko'rsatilmaydi
+          const hidden = item.resultHidden || !item.exam_response;
+          return {
+            _id: index + 1,
+            examTitle: item.exam?.title,
+            date: new Date(item.createdAt).toLocaleDateString("en-GB"),
+            status: hidden ? "yopiq" : item.status,
+            score: hidden
+              ? "—"
+              : Object.values(JSON.parse(item.exam_response)).filter((q) => q.check).length,
+            total: hidden
+              ? "—"
+              : Object.keys(JSON.parse(item.exam_response)).length,
+          };
+        });
         setGrades(formattedGrades);
       })
       .catch((err) => console.log(err));

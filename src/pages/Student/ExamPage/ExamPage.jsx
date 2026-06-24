@@ -243,11 +243,17 @@ const ExamPage = () => {
     return (
       <div style={{ textAlign: "center", marginTop: "20px" }}>
         <Typography variant="h4">Natijalar</Typography>
-        <Typography variant="h6">
-          {/* Tez orada e'lon qilinadi */}
-          To'g'ri javoblar: {result?.result?.grade?.grade}/
-          {result?.result?.grade?.total}
-        </Typography>
+        {result?.resultHidden ? (
+          <Typography variant="h6">
+            Javoblaringiz qabul qilindi. Natija o'qituvchi tomonidan yopilgan.
+          </Typography>
+        ) : (
+          <Typography variant="h6">
+            {/* Tez orada e'lon qilinadi */}
+            To'g'ri javoblar: {result?.result?.grade?.grade}/
+            {result?.result?.grade?.total}
+          </Typography>
+        )}
         <Link to={"/student/exams"}>Ortga qaytish</Link>
       </div>
     );

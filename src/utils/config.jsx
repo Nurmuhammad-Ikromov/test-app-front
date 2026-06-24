@@ -3,8 +3,8 @@ import axios from "axios";
 const API = axios.create({
   // baseURL: "https://test-app-d1ps.onrender.com"
   // baseURL: "https://test-pdp-backend.onrender.com",
-  baseURL: "https://test-pdp-backend-ao8r.onrender.com",
-  // baseURL: "http://localhost:3000",
+  // baseURL: "https://test-pdp-backend-ao8r.onrender.com",
+  baseURL: "http://localhost:3000",
   // baseURL: "https://api.pdp-edu.uz/",
 });
 
